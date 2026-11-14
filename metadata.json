@@ -1,0 +1,6 @@
+{
+  "name": "AFTERLIGHT — Planetary Archaeology & Deep Space Heritage",
+  "description": "An immersive 3D planetary archaeology, scientific provenance, and mission storytelling platform mapping humanity's hardware across the Moon, Mars, and Solar System using authentic NASA PDS, LROC, MOLA, and NSSDC archival records.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
