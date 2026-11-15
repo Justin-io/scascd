@@ -93,13 +93,13 @@ test('Phase 10 educational assessment evaluator scores submissions and returns c
   assert.equal(result.earnedPoints, result.maxPoints);
 });
 
-test('60-Beat 12-Chapter Story Choreography Engine generates 5 synchronized micro-beats and physics telemetry per chapter', async () => {
+test('70-Beat 14-Chapter Story Choreography Engine generates 5 synchronized micro-beats and physics telemetry per chapter', async () => {
   const { getChapterStoryBeats, computeLiveChoreographyTelemetry } = await import(
     './storyChoreographyEngine'
   );
   const apollo11 = ARTIFACT_RECORDS[0];
-  assert.equal(apollo11.storyChapters.length, 12);
-  for (const ch of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const) {
+  assert.equal(apollo11.storyChapters.length, 14);
+  for (const ch of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as const) {
     const beats = getChapterStoryBeats(apollo11, ch);
     assert.equal(beats.length, 5);
     const telemetry = computeLiveChoreographyTelemetry(apollo11, ch, 0.35);

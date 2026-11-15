@@ -47,7 +47,9 @@ export type StoryChapterNumber =
   | 9
   | 10
   | 11
-  | 12;
+  | 12
+  | 13
+  | 14;
 
 export type WorkspacePanel =
   | 'none'

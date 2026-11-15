@@ -2757,6 +2757,42 @@ function expandTo12HighPrecisionChapters(art: ArtifactRecord): StoryChapter[] {
       title: '12 · Orbital Recon & Legacy',
       subtitle: `${reconSatName} Sub-Meter Overflight & Archaeological Preservation`,
     },
+    {
+      chapterNumber: 13,
+      title: '13 · The Legacy Observatory',
+      subtitle: `DSN 70m Ground Terminals, 1,420 MHz Line & Infrared Spectral Cross-Correlation`,
+      factualParagraphs: [
+        {
+          text: `Ground-based deep-space tracking stations (Goldstone, Madrid, Canberra) and planetary orbiters maintain active cross-correlation with ${art.name} across the 1,420.405 MHz neutral hydrogen line, 22.2 GHz water maser transitions, and calibrated MRO CRISM / LROC Diviner infrared radiometry bands (1.25 µm to 4.26 µm), anchoring its physical state into the permanent astronomical archive [${primaryClaimIds.join(', ')}].`,
+          simpleText: `Using giant radio dishes and infrared orbital cameras, scientists track the signals, temperature, and minerals surrounding ${art.name} to preserve its permanent scientific legacy [${primaryClaimIds.join(', ')}].`,
+          claimIds: primaryClaimIds,
+        },
+      ],
+      firstPersonPassage: `[CREATIVE NARRATIVE] Across the light-minutes of cold space, my quiet carrier harmonics still resonate in the observatory correlator arrays—a faint, unmistakable pulse of human engineering amidst the cosmic silence.`,
+      telemetryHighlight: {
+        label: 'Carrier Line Band',
+        value: '1,420.405',
+        unit: 'MHz',
+      },
+    },
+    {
+      chapterNumber: 14,
+      title: '14 · The Quiet Monuments',
+      subtitle: `Planetary Archaeology Epilogue & Humanity's Extraterrestrial Heritage`,
+      factualParagraphs: [
+        {
+          text: `Standing under the unshielded cosmic sky, ${art.name} at ${art.regionName} is a permanent archaeological monument of human civilization. Protected under COSPAR planetary protection guidelines, its aerospace alloys undergo gentle micro-meteoroid space weathering, enduring as humanity's silent heritage across the Solar System [${primaryClaimIds.join(', ')}].`,
+          simpleText: `Resting quietly on the surface under the stars, ${art.name} is a historic monument of human curiosity, preserved forever on another world [${primaryClaimIds.join(', ')}].`,
+          claimIds: primaryClaimIds,
+        },
+      ],
+      firstPersonPassage: `[CREATIVE NARRATIVE] The alien winds have smoothed my blast craters; the stars turn overhead in silence. I am no longer a transient machine—I am an eternal monument to the curiosity of Earth.`,
+      telemetryHighlight: {
+        label: 'Heritage Status',
+        value: 'PERMANENT',
+        unit: 'SITE',
+      },
+    },
   ];
 }
 

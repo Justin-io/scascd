@@ -224,9 +224,9 @@ export function validateScientificDataset(
       }
     }
 
-    // Verify story chapters have 12 high-precision chapters and valid claim links
-    if (art.storyChapters.length !== 12) {
-      errors.push(`Artifact ${art.id} must have 12 story chapters, found ${art.storyChapters.length}`);
+    // Verify story chapters have 14 high-precision chapters and valid claim links
+    if (art.storyChapters.length !== 14) {
+      errors.push(`Artifact ${art.id} must have 14 story chapters, found ${art.storyChapters.length}`);
     }
     for (const ch of art.storyChapters) {
       for (const p of ch.factualParagraphs) {

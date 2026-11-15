@@ -457,17 +457,49 @@ export function buildHighPolyLandingSiteTerrainPatch(
   patchMesh.receiveShadow = true;
   group.add(patchMesh);
 
-  // Add 56 Ultra-High-Polygon Fractured 3D Boulders & Outcrops (Icosahedron detail=3 => 320 tris each = 17,920 boulder tris!)
+  // GPU OPTIMIZATION: InstancedMesh for 56 Fractured Basalt Boulders (1 Draw Call instead of 56!)
   const rockBaseMat = new THREE.MeshStandardMaterial({
-    color: isMars ? '#662f1a' : '#4a505c',
-    roughness: 0.92,
-    metalness: 0.1,
+    map: regolithTex,
     bumpMap: regolithTex,
-    bumpScale: 0.032,
-    envMapIntensity: 0.12,
+    bumpScale: 0.08,
+    roughness: 0.96,
+    metalness: 0.02,
+    envMapIntensity: 0.08,
   });
 
-  for (let b = 0; b < 56; b++) {
+  const masterRockGeom = new THREE.IcosahedronGeometry(1.0, 3);
+  const rPos = masterRockGeom.attributes.position;
+  for (let vi = 0; vi < rPos.count; vi++) {
+    const vx = rPos.getX(vi);
+    const vy = rPos.getY(vi);
+    const vz = rPos.getZ(vi);
+    const disp =
+      0.72 +
+      0.46 *
+        pseudoNoise2D(
+          vx * 36 + 1.2,
+          vy * 36 + vz * 24 + 0.8
+        );
+    rPos.setXYZ(vi, vx * disp * 1.15, vy * disp * 0.95, vz * disp * 0.82);
+  }
+  masterRockGeom.computeVertexNormals();
+
+  const boulderCount = 56;
+  const instancedBoulders = new THREE.InstancedMesh(
+    masterRockGeom,
+    rockBaseMat,
+    boulderCount
+  );
+  instancedBoulders.castShadow = true;
+  instancedBoulders.receiveShadow = true;
+
+  const scratchMatrix = new THREE.Matrix4();
+  const scratchPos = new THREE.Vector3();
+  const scratchQuat = new THREE.Quaternion();
+  const scratchScale = new THREE.Vector3();
+  const scratchEuler = new THREE.Euler();
+
+  for (let b = 0; b < boulderCount; b++) {
     const angle = b * 2.39996 + 0.4; // Golden angle distribution
     const dist = 0.17 + ((b * 0.019) % 1.02);
     const bx = Math.cos(angle) * dist;
@@ -475,36 +507,26 @@ export function buildHighPolyLandingSiteTerrainPatch(
     const u = bx / (patchSpan * 0.5);
     const v = by / (patchSpan * 0.5);
 
-    const rockScale = 0.015 + (b % 6) * 0.0075;
-    const rockGeom = new THREE.IcosahedronGeometry(rockScale, 3); // 320 triangles per boulder!
-    const rPos = rockGeom.attributes.position;
-    for (let vi = 0; vi < rPos.count; vi++) {
-      const vx = rPos.getX(vi);
-      const vy = rPos.getY(vi);
-      const vz = rPos.getZ(vi);
-      const disp =
-        0.7 +
-        0.52 *
-          pseudoNoise2D(
-            vx * 48 + b * 1.3,
-            vy * 48 + vz * 33 + b * 0.7
-          );
-      rPos.setXYZ(vi, vx * disp * 1.22, vy * disp, vz * disp * 0.78);
-    }
-    rockGeom.computeVertexNormals();
-
-    const rockMesh = new THREE.Mesh(rockGeom, rockBaseMat);
+    const rockBaseScale = 0.015 + (b % 6) * 0.0075;
     const horizDistSq = bx * bx + by * by;
     const sphereDrop =
       planetRadius - Math.sqrt(Math.max(0.1, planetRadius * planetRadius - horizDistSq));
     const microH = evaluateLandingSiteMicroHeight(u, v);
 
-    rockMesh.position.set(bx, by, -sphereDrop + microH + rockScale * 0.35);
-    rockMesh.rotation.set(b * 0.7, b * 1.1, b * 0.4);
-    rockMesh.castShadow = true;
-    rockMesh.receiveShadow = true;
-    group.add(rockMesh);
+    scratchPos.set(bx, by, -sphereDrop + microH + rockBaseScale * 0.35);
+    scratchEuler.set(b * 0.7, b * 1.1, b * 0.4);
+    scratchQuat.setFromEuler(scratchEuler);
+    scratchScale.set(
+      rockBaseScale * (0.85 + (b % 4) * 0.15),
+      rockBaseScale * (0.95 + (b % 3) * 0.12),
+      rockBaseScale * (0.80 + (b % 5) * 0.18)
+    );
+
+    scratchMatrix.compose(scratchPos, scratchQuat, scratchScale);
+    instancedBoulders.setMatrixAt(b, scratchMatrix);
   }
+  instancedBoulders.instanceMatrix.needsUpdate = true;
+  group.add(instancedBoulders);
 
   // Orient patch so local +Z aligns with `siteNormal` and position at surface
   const surfacePos = siteNormal.clone().multiplyScalar(planetRadius);

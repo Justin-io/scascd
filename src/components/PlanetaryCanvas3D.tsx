@@ -77,6 +77,354 @@ export interface LayerVisibilityState {
   categoryFilter: ArtifactCategory | 'all';
 }
 
+interface Observatory3DBuild {
+  group: THREE.Group;
+  dishPivot: THREE.Group;
+  fftBars: THREE.Mesh[];
+}
+
+interface EndingMonuments3DBuild {
+  group: THREE.Group;
+  particles: THREE.Points;
+}
+
+function buildObservatory3DGroup(): Observatory3DBuild {
+  const group = new THREE.Group();
+  group.name = 'legacyObservatoryGroup';
+
+  // 1. DSN 70m Tracking Antenna Station Base & Alidade
+  const antennaStation = new THREE.Group();
+  antennaStation.position.set(1.4, 0, -0.6);
+
+  // Concrete pedestal
+  const baseGeom = new THREE.CylinderGeometry(0.55, 0.75, 0.45, 16);
+  const baseMat = new THREE.MeshStandardMaterial({
+    color: 0x334155,
+    roughness: 0.92,
+    metalness: 0.12,
+  });
+  const pedestal = new THREE.Mesh(baseGeom, baseMat);
+  pedestal.position.y = 0.225;
+  pedestal.receiveShadow = true;
+  antennaStation.add(pedestal);
+
+  // Elevation-over-Azimuth Turntable Ring
+  const collarGeom = new THREE.CylinderGeometry(0.48, 0.52, 0.15, 16);
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0x64748b,
+    metalness: 0.85,
+    roughness: 0.28,
+  });
+  const collar = new THREE.Mesh(collarGeom, metalMat);
+  collar.position.y = 0.525;
+  antennaStation.add(collar);
+
+  // Fork elevation trunnion mounts
+  const forkArmGeom = new THREE.BoxGeometry(0.12, 0.55, 0.2);
+  const forkL = new THREE.Mesh(forkArmGeom, metalMat);
+  forkL.position.set(-0.35, 0.8, 0);
+  const forkR = new THREE.Mesh(forkArmGeom, metalMat);
+  forkR.position.set(0.35, 0.8, 0);
+  antennaStation.add(forkL, forkR);
+
+  // Steerable Dish Assembly Pivot (Elevation axis)
+  const dishPivot = new THREE.Group();
+  dishPivot.position.set(0, 0.95, 0);
+
+  // Parabolic Primary Reflector (Deep Cassegrain 70-meter dish)
+  const dishGeom = new THREE.CylinderGeometry(1.5, 0.2, 0.42, 32, 1, true);
+  const dishMat = new THREE.MeshStandardMaterial({
+    color: 0xf8fafc,
+    metalness: 0.72,
+    roughness: 0.22,
+    side: THREE.DoubleSide,
+  });
+  const dishMesh = new THREE.Mesh(dishGeom, dishMat);
+  dishMesh.rotation.x = Math.PI / 2;
+  dishMesh.castShadow = true;
+  dishPivot.add(dishMesh);
+
+  // Central Feed Cone
+  const feedGeom = new THREE.CylinderGeometry(0.12, 0.22, 0.32, 16);
+  const feedMat = getGoldKaptonMaterial();
+  const feedMesh = new THREE.Mesh(feedGeom, feedMat);
+  feedMesh.rotation.x = Math.PI / 2;
+  feedMesh.position.z = 0.15;
+  dishPivot.add(feedMesh);
+
+  // Quadripod subreflector support struts
+  const strutMat = new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    metalness: 0.9,
+    roughness: 0.2,
+  });
+  const strutGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.85, 6);
+  for (let s = 0; s < 4; s++) {
+    const angle = (s * Math.PI) / 2 + Math.PI / 4;
+    const strut = new THREE.Mesh(strutGeom, strutMat);
+    strut.position.set(Math.cos(angle) * 0.45, Math.sin(angle) * 0.45, 0.42);
+    strut.rotation.x = Math.PI / 3;
+    strut.rotation.z = angle;
+    dishPivot.add(strut);
+  }
+
+  // Cassegrain Subreflector Cone
+  const subConeGeom = new THREE.ConeGeometry(0.16, 0.18, 16);
+  const subConeMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.95,
+    roughness: 0.15,
+  });
+  const subCone = new THREE.Mesh(subConeGeom, subConeMat);
+  subCone.rotation.x = -Math.PI / 2;
+  subCone.position.z = 0.72;
+  dishPivot.add(subCone);
+
+  antennaStation.add(dishPivot);
+  group.add(antennaStation);
+
+  // 2. Real-Time 3D Fourier Hydrogen Line (1,420.405 MHz) Spectrum Waterfall Array (24 Vertical Bars)
+  const fftBars: THREE.Mesh[] = [];
+  const fftArrayGroup = new THREE.Group();
+  fftArrayGroup.position.set(0.6, 0.04, 1.4);
+  fftArrayGroup.rotation.y = -0.32;
+
+  // Baseline datum rail
+  const railGeom = new THREE.BoxGeometry(2.5, 0.03, 0.08);
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 });
+  const rail = new THREE.Mesh(railGeom, railMat);
+  rail.position.set(0, 0.015, 0);
+  fftArrayGroup.add(rail);
+
+  const barCount = 24;
+  const barWidth = 0.07;
+  const barDepth = 0.04;
+  const barSpan = 2.3;
+  const barGeom = new THREE.BoxGeometry(barWidth, 1.0, barDepth);
+
+  for (let i = 0; i < barCount; i++) {
+    const isCenterHLine = Math.abs(i - 12) <= 2;
+    const barMat = new THREE.MeshStandardMaterial({
+      color: isCenterHLine ? 0x06b6d4 : 0x0284c7,
+      emissive: isCenterHLine ? 0x06b6d4 : 0x0369a1,
+      emissiveIntensity: isCenterHLine ? 0.85 : 0.4,
+      metalness: 0.5,
+      roughness: 0.2,
+    });
+    const bar = new THREE.Mesh(barGeom, barMat);
+    const xPos = -barSpan / 2 + (i / (barCount - 1)) * barSpan;
+    bar.position.set(xPos, 0.25, 0);
+    bar.scale.set(1, 0.5, 1);
+    fftArrayGroup.add(bar);
+    fftBars.push(bar);
+  }
+  group.add(fftArrayGroup);
+
+  // 3. 3D Floating Calibrated Thermal Infrared Radiometric Panels (CRISM / Diviner Multi-Band Matrices)
+  const irPanelGroup = new THREE.Group();
+  irPanelGroup.position.set(-1.6, 1.1, 0.8);
+  irPanelGroup.rotation.y = 0.45;
+
+  const panelFrameGeom = new THREE.BoxGeometry(0.95, 0.65, 0.03);
+  const panelFrameMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    metalness: 0.85,
+    roughness: 0.25,
+  });
+  const panelFrame = new THREE.Mesh(panelFrameGeom, panelFrameMat);
+  irPanelGroup.add(panelFrame);
+
+  // 8-Band thermal radiometric grid face
+  const irGridCanvas = document.createElement('canvas');
+  irGridCanvas.width = 128;
+  irGridCanvas.height = 96;
+  const ictx = irGridCanvas.getContext('2d')!;
+  ictx.fillStyle = '#090d16';
+  ictx.fillRect(0, 0, 128, 96);
+  const bandColors = [
+    '#312e81', '#4338ca', '#0284c7', '#0d9488',
+    '#16a34a', '#ca8a04', '#ea580c', '#e11d48',
+  ];
+  for (let b = 0; b < 8; b++) {
+    ictx.fillStyle = bandColors[b];
+    const bx = 8 + (b % 4) * 28;
+    const by = 8 + Math.floor(b / 4) * 40;
+    ictx.fillRect(bx, by, 24, 32);
+    ictx.strokeStyle = '#ffffff';
+    ictx.lineWidth = 1;
+    ictx.strokeRect(bx, by, 24, 32);
+  }
+  const irTex = new THREE.CanvasTexture(irGridCanvas);
+  const irMat = new THREE.MeshBasicMaterial({ map: irTex, side: THREE.DoubleSide });
+  const irFace = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.58), irMat);
+  irFace.position.z = 0.02;
+  irPanelGroup.add(irFace);
+
+  group.add(irPanelGroup);
+
+  return { group, dishPivot, fftBars };
+}
+
+function buildEndingMonuments3DGroup(): EndingMonuments3DBuild {
+  const group = new THREE.Group();
+  group.name = 'endingMonumentsGroup';
+
+  // 1. Sanctuary Base Ring
+  const ringGeom = new THREE.RingGeometry(2.4, 2.52, 48);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x94a3b8,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.42,
+  });
+  const sanctuaryRing = new THREE.Mesh(ringGeom, ringMat);
+  sanctuaryRing.rotation.x = -Math.PI / 2;
+  sanctuaryRing.position.y = 0.015;
+  group.add(sanctuaryRing);
+
+  // 2. Three Historical Heritage Plinths
+  const plinthBaseMat = new THREE.MeshStandardMaterial({
+    color: 0x1e293b,
+    roughness: 0.82,
+    metalness: 0.35,
+  });
+
+  // Plinth A (Apollo 11 LRRR: 100 quartz corner cubes)
+  const plinthAGroup = new THREE.Group();
+  plinthAGroup.position.set(-1.25, 0, 0.95);
+  const pedA = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 0.16, 8), plinthBaseMat);
+  pedA.position.y = 0.08;
+  plinthAGroup.add(pedA);
+
+  const lrrrTray = new THREE.Mesh(
+    new THREE.BoxGeometry(0.38, 0.04, 0.38),
+    new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.15 })
+  );
+  lrrrTray.position.set(0, 0.22, 0);
+  lrrrTray.rotation.x = -0.45;
+  const prismMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0x38bdf8,
+    emissiveIntensity: 0.65,
+    roughness: 0.05,
+    metalness: 0.95,
+  });
+  const prismMesh = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.02, 0.32), prismMat);
+  prismMesh.position.y = 0.025;
+  lrrrTray.add(prismMesh);
+  plinthAGroup.add(lrrrTray);
+  group.add(plinthAGroup);
+
+  // Plinth B (Surveyor 3 / Apollo 12 Television Camera Assembly Specimen)
+  const plinthBGroup = new THREE.Group();
+  plinthBGroup.position.set(1.35, 0, 0.85);
+  const pedB = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.18, 16), plinthBaseMat);
+  pedB.position.y = 0.09;
+  plinthBGroup.add(pedB);
+
+  const camBarrel = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.1, 0.26, 16),
+    new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.82, roughness: 0.35 })
+  );
+  camBarrel.rotation.z = Math.PI / 4;
+  camBarrel.position.set(0, 0.26, 0);
+  plinthBGroup.add(camBarrel);
+  group.add(plinthBGroup);
+
+  // Plinth C (Mars Rover Heritage Wheel Tread & Titanium Sample Tube)
+  const plinthCGroup = new THREE.Group();
+  plinthCGroup.position.set(0, 0, -1.45);
+  const pedC = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.12, 0.85), plinthBaseMat);
+  pedC.position.y = 0.06;
+  plinthCGroup.add(pedC);
+
+  const tubeMesh = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.022, 0.022, 0.34, 16),
+    new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.95, roughness: 0.1 })
+  );
+  tubeMesh.rotation.z = Math.PI / 2;
+  tubeMesh.position.set(0, 0.14, 0);
+  plinthCGroup.add(tubeMesh);
+  group.add(plinthCGroup);
+
+  // 3. Central Stela / Archaeological Monument Plaque
+  const stelaGroup = new THREE.Group();
+  stelaGroup.position.set(0, 0, 0.1);
+  const slabGeom = new THREE.BoxGeometry(0.85, 1.25, 0.1);
+  const slabMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    roughness: 0.88,
+    metalness: 0.25,
+  });
+  const slab = new THREE.Mesh(slabGeom, slabMat);
+  slab.position.y = 0.625;
+  stelaGroup.add(slab);
+
+  // Gold-leaf commemorative inscription plaque
+  const plaqueCanvas = document.createElement('canvas');
+  plaqueCanvas.width = 256;
+  plaqueCanvas.height = 360;
+  const pctx = plaqueCanvas.getContext('2d')!;
+  pctx.fillStyle = '#1c1917';
+  pctx.fillRect(0, 0, 256, 360);
+  pctx.strokeStyle = '#d97706';
+  pctx.lineWidth = 4;
+  pctx.strokeRect(8, 8, 240, 344);
+  pctx.strokeRect(14, 14, 228, 332);
+  pctx.fillStyle = '#fbbf24';
+  pctx.font = 'bold 15px sans-serif';
+  pctx.textAlign = 'center';
+  pctx.fillText('AFTERLIGHT', 128, 48);
+  pctx.font = '11px sans-serif';
+  pctx.fillStyle = '#fde68a';
+  pctx.fillText('PLANETARY ARCHAEOLOGY', 128, 72);
+  pctx.fillText('SANCTUARY', 128, 90);
+  pctx.font = 'italic 11px sans-serif';
+  pctx.fillText('"They remain where they fell,', 128, 175);
+  pctx.fillText('not as debris,', 128, 195);
+  pctx.fillText('but as the quiet monuments', 128, 215);
+  pctx.fillText('of human curiosity."', 128, 235);
+  pctx.font = '10px sans-serif';
+  pctx.fillStyle = '#94a3b8';
+  pctx.fillText('1959 — PERPETUITY', 128, 315);
+
+  const plaqueTex = new THREE.CanvasTexture(plaqueCanvas);
+  const plaqueMat = new THREE.MeshStandardMaterial({
+    map: plaqueTex,
+    metalness: 0.65,
+    roughness: 0.35,
+  });
+  const plaqueMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 1.02), plaqueMat);
+  plaqueMesh.position.set(0, 0.64, 0.055);
+  stelaGroup.add(plaqueMesh);
+  group.add(stelaGroup);
+
+  // 4. Subtle Ambient Floating Regolith Dust Motes (240 Particles)
+  const particleCount = 240;
+  const particleGeo = new THREE.BufferGeometry();
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let p = 0; p < particleCount; p++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 0.4 + Math.random() * 2.8;
+    particlePositions[p * 3] = Math.cos(angle) * r;
+    particlePositions[p * 3 + 1] = 0.08 + Math.random() * 2.2;
+    particlePositions[p * 3 + 2] = Math.sin(angle) * r;
+  }
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  const particleMat = new THREE.PointsMaterial({
+    color: 0xfde68a,
+    size: 0.024,
+    transparent: true,
+    opacity: 0.48,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  group.add(particles);
+
+  return { group, particles };
+}
+
 interface PlanetaryCanvas3DProps {
   viewportMode: ViewportMode;
   celestialBodies: CelestialBodySpec[];
@@ -963,6 +1311,11 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
     let isSatelliteCinematicShotActive = false;
     let activeStoryCraftModel: THREE.Group | null = null;
     let activeStoryCurve: THREE.CatmullRomCurve3 | null = null;
+    let activeObservatoryGroup: THREE.Group | null = null;
+    let activeEndingMonumentsGroup: THREE.Group | null = null;
+    const activeObservatoryFftBars: THREE.Mesh[] = [];
+    let activeObservatoryDishPivot: THREE.Group | null = null;
+    let activeEndingParticles: THREE.Points | null = null;
     const storyCorridorGates: THREE.Mesh[] = [];
     const globeAnimatedCrafts: THREE.Group[] = [];
     let currentExplodedDisplay = stateRef.current.explodedFactor;
@@ -979,6 +1332,11 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
       activeSatelliteWorldRig = null;
       activeStoryCraftModel = null;
       activeStoryCurve = null;
+      activeObservatoryGroup = null;
+      activeEndingMonumentsGroup = null;
+      activeObservatoryFftBars.length = 0;
+      activeObservatoryDishPivot = null;
+      activeEndingParticles = null;
 
       const {
         viewportMode: mode,
@@ -1047,12 +1405,13 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
           const p = targetEntry.pivot.position;
           const activeScale = targetEntry.scaleGroup.scale.x || 1;
           const effRadius = targetEntry.baseRadiusSceneUnits * activeScale;
-          const dist =
-            bodyId === 'sun'
-              ? 36
-              : Math.max(3.2, effRadius * 4.2);
           camLookTarget.copy(p);
-          camTargetPos.set(p.x + dist, p.y + dist * 0.62, p.z + dist);
+          if (bodyId === 'sun') {
+            camTargetPos.set(-38, 28, 48);
+          } else {
+            const dist = Math.max(3.2, effRadius * 4.2);
+            camTargetPos.set(p.x + dist, p.y + dist * 0.62, p.z + dist);
+          }
           isCameraTransitioning = true;
         }
         return;
@@ -1446,6 +1805,22 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
         terrainSphere.receiveShadow = true;
         storyCinemaGroup.add(terrainSphere);
 
+        // Thin Mars atmospheric dust limb haze (optical back-scattering on tenuous CO2 boundary)
+        if (isMars) {
+          const marsAtmoGeo = new THREE.SphereGeometry(terrainPatchRadius * 1.025, 64, 42);
+          const marsAtmoMat = new THREE.MeshBasicMaterial({
+            color: 0xc2410c,
+            transparent: true,
+            opacity: 0.14,
+            side: THREE.BackSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+          const marsAtmo = new THREE.Mesh(marsAtmoGeo, marsAtmoMat);
+          marsAtmo.position.set(0, -terrainPatchRadius, 0);
+          storyCinemaGroup.add(marsAtmo);
+        }
+
         // Attach High-Polygon Displaced Crater Rim & 56-Boulder Patch directly under the landing site
         const highPolyPatch = buildHighPolyLandingSiteTerrainPatch(
           art.bodyId,
@@ -1519,6 +1894,21 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
         storyCinemaGroup.add(craftModel);
         activeStoryCraftModel = craftModel;
 
+        // 4. Chapter 13: Legacy Deep Space Network Observatory Antenna & 3D FFT Spectrum
+        const obsBuilt = buildObservatory3DGroup();
+        storyCinemaGroup.add(obsBuilt.group);
+        activeObservatoryGroup = obsBuilt.group;
+        activeObservatoryDishPivot = obsBuilt.dishPivot;
+        activeObservatoryFftBars.push(...obsBuilt.fftBars);
+        activeObservatoryGroup.visible = false;
+
+        // 5. Chapter 14: Historical Artifact Sanctuary, Stela Plaque & Regolith Dust Motes
+        const endBuilt = buildEndingMonuments3DGroup();
+        storyCinemaGroup.add(endBuilt.group);
+        activeEndingMonumentsGroup = endBuilt.group;
+        activeEndingParticles = endBuilt.particles;
+        activeEndingMonumentsGroup.visible = false;
+
         camLookTarget.set(1.0, 0.9, 0);
         camTargetPos.set(-4.8, 3.4, 6.8);
         isCameraTransitioning = true;
@@ -1571,7 +1961,7 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
     const handlePointerUp = (e: MouseEvent) => {
       const dx = e.clientX - pointerDownPos.x;
       const dy = e.clientY - pointerDownPos.y;
-      if (dx * dx + dy * dy > 36) return;
+      if (dx * dx + dy * dy > 64) return;
 
       updatePointerFromEvent(e);
       raycaster.setFromCamera(pointer, camera);
@@ -2169,6 +2559,37 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
             rig.lidarScanRing.visible = true;
             rig.lidarScanRing.scale.setScalar(1.8 + Math.sin(elapsedTotal * 3) * 0.35);
             rig.lidarScanRing.position.y = 0.03;
+          } else if (chapter === 13) {
+            // CHAPTER 13 — The Legacy Observatory: Deep Space Network 70m Dish Tracking, Hydrogen 1,420.405 MHz Line FFT Spectrum & Radiometry
+            activeStoryCraftModel.position.set(0, 0, 0);
+            if (activeObservatoryDishPivot) {
+              activeObservatoryDishPivot.rotation.x = -0.32 + Math.sin(elapsedTotal * 0.12) * 0.08;
+              activeObservatoryDishPivot.rotation.y = Math.sin(elapsedTotal * 0.08) * 0.18;
+            }
+            for (let b = 0; b < activeObservatoryFftBars.length; b++) {
+              const bar = activeObservatoryFftBars[b];
+              const distCenter = Math.abs(b - 12);
+              const gauss = Math.exp(-(distCenter * distCenter) / 5.2);
+              const timeWave =
+                Math.sin(elapsedTotal * 5.5 + b * 0.75) * 0.16 +
+                Math.sin(elapsedTotal * 11.0 + b * 1.8) * 0.08;
+              const barHeight = Math.max(0.12, Math.min(1.45, 0.22 + gauss * 0.85 + timeWave));
+              bar.scale.y = barHeight;
+              bar.position.y = barHeight * 0.5;
+            }
+          } else if (chapter === 14) {
+            // CHAPTER 14 — The Quiet Monuments: Planetary Archaeology Sanctuary & Epilogue
+            activeStoryCraftModel.position.set(0, 0, 0);
+            if (activeEndingParticles) {
+              activeEndingParticles.rotation.y = elapsedTotal * 0.025;
+            }
+          }
+
+          if (activeObservatoryGroup) {
+            activeObservatoryGroup.visible = chapter === 13;
+          }
+          if (activeEndingMonumentsGroup) {
+            activeEndingMonumentsGroup.visible = chapter === 14;
           }
 
           // Animate Ultra-High-Polygon Reconnaissance Satellite solar wings & HGA dish whenever visible
@@ -2235,7 +2656,7 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
                 craftPos.z + Math.sin(orbitAng) * 6.2
               );
             } else {
-              // `director_auto`: Automatic cinematic cuts tailored to active 12-chapter stage!
+              // `director_auto`: Automatic cinematic cuts tailored to active 14-chapter stage!
               camLookTarget.set(craftPos.x + stageOffset, craftPos.y + 0.75, craftPos.z);
               if (chapter >= 2 && chapter <= 4) {
                 camTargetPos.set(craftPos.x - 3.6, craftPos.y + 2.2, craftPos.z + 4.8);
@@ -2245,6 +2666,19 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
                 camTargetPos.set(craftPos.x - 3.0, craftPos.y + 1.9, craftPos.z + 4.1);
               } else if (chapter === 12) {
                 camTargetPos.set(craftPos.x - 4.6, craftPos.y + 4.6, craftPos.z + 6.2);
+              } else if (chapter === 13) {
+                // Focus on DSN antenna station and 3D FFT spectrum array
+                camLookTarget.set(craftPos.x + 1.15, craftPos.y + 1.25, craftPos.z + 0.15);
+                camTargetPos.set(craftPos.x - 2.8, craftPos.y + 2.4, craftPos.z + 4.2);
+              } else if (chapter === 14) {
+                // Dignified slow orbital sweep around the Planetary Archaeology Sanctuary
+                const endAngle = elapsedTotal * 0.04;
+                camLookTarget.set(craftPos.x, craftPos.y + 0.72, craftPos.z);
+                camTargetPos.set(
+                  craftPos.x + Math.cos(endAngle) * 5.4,
+                  craftPos.y + 1.95 + Math.sin(elapsedTotal * 0.06) * 0.22,
+                  craftPos.z + Math.sin(endAngle) * 5.4
+                );
               } else {
                 camTargetPos.set(
                   craftPos.x - 4.2 + Math.sin(elapsedTotal * 0.25) * 0.8,
@@ -2257,6 +2691,10 @@ export const PlanetaryCanvas3D: React.FC<PlanetaryCanvas3DProps> = ({
             const camAlpha = 1 - Math.exp(-4.2 * dt);
             camera.position.lerp(camTargetPos, camAlpha);
             controls.target.lerp(camLookTarget, camAlpha);
+
+            // Anti-clipping ground boundary protection (keeps camera above planetary terrain)
+            camera.position.y = Math.max(0.24, camera.position.y);
+            controls.target.y = Math.max(0.05, controls.target.y);
           }
         }
       }

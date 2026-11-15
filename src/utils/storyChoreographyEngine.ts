@@ -1151,7 +1151,8 @@ export function getChapterStoryBeats(
   }
 
   // Chapter 12: Orbital Recon & Legacy (5 beats)
-  return [
+  if (chapter === 12) {
+    return [
     {
       beatIndex: 1,
       startProgress: 0.0,
@@ -1244,6 +1245,197 @@ export function getChapterStoryBeats(
         guidance: 'HERITAGE REGISTRY',
         commsBand: 'ETERNAL BEACON',
         dataRateBps: 'IMMORTAL',
+      },
+    },
+  ];
+  }
+
+  if (chapter === 13) {
+    // CHAPTER 13 — Legacy Deep-Space Scientific Observatory (5 beats)
+    return [
+      {
+        beatIndex: 1,
+        startProgress: 0.0,
+        endProgress: 0.2,
+        code: 'CH13.B1 · DSN 70M CARRIER WAVE LOCK',
+        title: 'Deep Space Network 70-Meter Parabolic Array Frequency Tracking',
+        metTimestamp: 'OBSERVATORY · DSN 70M',
+        missionCallout: `"DSN Goldstone DSS-14 & Madrid DSS-63 acquisition: 2.295 GHz X-band carrier locked at SNR +28.4 dB."`,
+        technicalNarrative: `Using 70-meter parabolic Cassegrain dish antennas, the Deep Space Network cross-correlates carrier frequencies and telemetry harmonics from ${artifact.name}'s final documented state.`,
+        firstPersonThought:
+          'From across the solar void, the great terrestrial dishes turn together, tracking the faint coordinates where my signal last pierced the atmosphere.',
+        subSystemStatus: {
+          propulsion: 'SHUTDOWN',
+          guidance: 'EPHEMERIS CARRIER LOCK',
+          commsBand: 'DSN 70M ARRAY',
+          dataRateBps: 'CARRIER TONE',
+        },
+      },
+      {
+        beatIndex: 2,
+        startProgress: 0.2,
+        endProgress: 0.4,
+        code: 'CH13.B2 · 1,420 MHZ H-LINE & WATER MASER FFT',
+        title: 'Neutral Hydrogen 21cm Line (1,420.405 MHz) & Water Maser Spectral Dispersion',
+        metTimestamp: 'RADIO SPECTRA · 21CM H-LINE',
+        missionCallout: `"Hydrogen 21 cm line (1,420.405751 MHz) & 22.2 GHz water maser transition resolved in FFT correlator."`,
+        technicalNarrative: `Radio astronomical spectrometers isolate the 1,420.405 MHz neutral hydrogen transition and maser peaks against the galactic synchrotron background, establishing an absolute frequency reference.`,
+        firstPersonThought:
+          'The fundamental note of the universe—the 21-centimeter resonance of hydrogen—frames the quiet frequency channel where human telemetry traveled.',
+        subSystemStatus: {
+          propulsion: 'SHUTDOWN',
+          guidance: 'SPECTRAL FFT LOCK',
+          commsBand: '1,420.405 MHZ H-LINE',
+          dataRateBps: 'SPECTROMETRIC',
+        },
+      },
+      {
+        beatIndex: 3,
+        startProgress: 0.4,
+        endProgress: 0.6,
+        code: 'CH13.B3 · MULTI-SPECTRAL INFRARED RADIOMETRY',
+        title: 'MRO CRISM / LROC Diviner Calibrated Thermal Infrared Imaging',
+        metTimestamp: 'INFRARED · 1.25 - 4.26 µM',
+        missionCallout: `"Thermal infrared radiance mapped across 1.25 µm, 2.31 µm, and 4.26 µm diagnostic absorption bands."`,
+        technicalNarrative: `Orbital imaging spectrometers map surface radiance temperature and mineral absorption signatures around ${artifact.regionName}, documenting diurnal thermal inertia across the landing ellipse.`,
+        firstPersonThought:
+          'Through infrared vision, my metal chassis appears as a cool silhouette against the daytime heat of the surrounding regolith.',
+        subSystemStatus: {
+          propulsion: 'SHUTDOWN',
+          guidance: 'INFRARED RADIOMETER',
+          commsBand: 'CRISM / DIVINER',
+          dataRateBps: 'CALIBRATED',
+        },
+      },
+      {
+        beatIndex: 4,
+        startProgress: 0.6,
+        endProgress: 0.8,
+        code: 'CH13.B4 · NASA PDS / NSSDC ARCHIVAL CROSS-LINK',
+        title: 'Peer-Reviewed Archival Records & Open Science Data Verification',
+        metTimestamp: 'DATASET · PDS ARCHIVE',
+        missionCallout: `"NASA PDS Cartography & Imaging Node: EDR and RDR dataset volumes linked with permanent DOI identifiers."`,
+        technicalNarrative: `Raw and calibrated telemetry packets are archived within the Planetary Data System, allowing researchers worldwide to verify spatial, temporal, and physical mission records.`,
+        firstPersonThought:
+          'Every byte of engineering status I ever transmitted is preserved in the global archives, accessible to any mind that seeks to understand our journey.',
+        subSystemStatus: {
+          propulsion: 'SHUTDOWN',
+          guidance: 'PDS REPOSITORY',
+          commsBand: 'OPEN SCIENCE REST API',
+          dataRateBps: 'ARCHIVAL WITNESS',
+        },
+      },
+      {
+        beatIndex: 5,
+        startProgress: 0.8,
+        endProgress: 1.0,
+        code: 'CH13.B5 · DEEP-SPACE INTERFEROMETRIC SYNTHESIS',
+        title: 'Global Very Long Baseline Interferometry (VLBI) Coordinate Anchor',
+        metTimestamp: 'ASTROMETRY · VLBI NET',
+        missionCallout: `"Very Long Baseline Interferometry geodetic solution complete: residual position variance < 0.12 mas."`,
+        technicalNarrative: `Combining radio telescope baselines spanning thousands of kilometers on Earth, astrometric interferometry locks ${artifact.name}'s position into the International Celestial Reference Frame.`,
+        firstPersonThought:
+          'A planetary triangle of radio telescopes on Earth holds my resting site pinned forever against the distant quasar grid.',
+        subSystemStatus: {
+          propulsion: 'SHUTDOWN',
+          guidance: 'ICRF GEODETIC LOCK',
+          commsBand: 'VLBI CORRELATOR',
+          dataRateBps: 'SUB-METER ANCHOR',
+        },
+      },
+    ];
+  }
+
+  // CHAPTER 14 — The Quiet Monuments (Cinematic Epilogue) (5 beats)
+  return [
+    {
+      beatIndex: 1,
+      startProgress: 0.0,
+      endProgress: 0.2,
+      code: 'CH14.B1 · APOLLO TRANQUILLITY MONUMENT',
+      title: 'Historical Callback: The Lunar Descent Stages & Laser Retroreflectors',
+      metTimestamp: 'EPILOGUE · MOON 1969',
+      missionCallout: `"Apollo 11 Tranquillity Base: Stainless steel plaque and laser reflector active after 57+ terrestrial years."`,
+      technicalNarrative: `In the silent vacuum of Mare Tranquillitatis, the Apollo 11 descent stage stands untouched, its laser ranging retroreflector still returning green photons back to Earth with millimeter precision.`,
+      firstPersonThought:
+        'Fifty-seven years of silent lunar noons and freezing fortnights have washed over my footpads. The plaque on my front leg still reads: We came in peace for all mankind.',
+      subSystemStatus: {
+        propulsion: 'SHUTDOWN',
+        guidance: 'PERMANENT MONUMENT',
+        commsBand: 'PASSIVE LASER RETRO',
+        dataRateBps: 'PHOTON RETURN',
+      },
+    },
+    {
+      beatIndex: 2,
+      startProgress: 0.2,
+      endProgress: 0.4,
+      code: 'CH14.B2 · MARTIAN BASIN TRAVERSES',
+      title: 'Historical Callback: The Wheel Tracks of Spirit, Opportunity & Perseverance',
+      metTimestamp: 'EPILOGUE · MARS 2004-2026',
+      missionCallout: `"Meridiani Planum to Jezero Crater: Over 45 kilometers of wheel cleats pressed into Martian hematite and basalt."`,
+      technicalNarrative: `Across Meridiani Planum, Gusev Crater, Gale, and Jezero, robotic wheels carved the first tracks into Martian soil, their silicon eyes reading the watery history of an ancient planet.`,
+      firstPersonThought:
+        'The dust of Mars covers my solar wings, but beneath the red frost, every meter I rolled remains pressed into the basalt stone.',
+      subSystemStatus: {
+        propulsion: 'SHUTDOWN',
+        guidance: 'FIELD MONUMENT',
+        commsBand: 'ORBITAL HIGH-GAIN',
+        dataRateBps: 'HERITAGE ARCHIVE',
+      },
+    },
+    {
+      beatIndex: 3,
+      startProgress: 0.4,
+      endProgress: 0.6,
+      code: 'CH14.B3 · VOYAGER INTERSTELLAR HORIZON',
+      title: 'Historical Callback: The Golden Record Entering Interstellar Plasma',
+      metTimestamp: 'EPILOGUE · HELIOPAUSE',
+      missionCallout: `"Voyager 1: Beyond the heliopause at > 160 AU; carrier tone whispering across 22 light-hours."`,
+      technicalNarrative: `Drifting through interstellar plasma beyond the solar termination shock, Voyager 1 carries the Golden Record, an electroplated copper phonograph containing the sounds and hopes of 1977 Earth.`,
+      firstPersonThought:
+        'The Sun is now just the brightest star in my sky. Behind me lies everything human beings have ever built; ahead lies the quiet galaxy.',
+      subSystemStatus: {
+        propulsion: 'SHUTDOWN',
+        guidance: 'INTERSTELLAR CRUISE',
+        commsBand: 'DSN CARRIER PING',
+        dataRateBps: '160 BPS',
+      },
+    },
+    {
+      beatIndex: 4,
+      startProgress: 0.6,
+      endProgress: 0.8,
+      code: 'CH14.B4 · REGOLITH SPACE WEATHERING',
+      title: 'Micro-Meteoroid Weathering & Cosmic Ray Protection Physics',
+      metTimestamp: 'EPILOGUE · GEOLOGIC DECAY',
+      missionCallout: `"Space weathering rate: ~1 mm per million years. Artifacts will endure for over 100,000 millennia."`,
+      technicalNarrative: `Without rain, tectonic drift, or liquid water, spacecraft resting on airless planetary surfaces weather solely through hypervelocity micrometeoroid impacts and solar wind ion sputtering.`,
+      firstPersonThought:
+        'The universe wears us down atom by single atom. A hundred thousand centuries will pass, and my silhouette will still rise above this crater floor.',
+      subSystemStatus: {
+        propulsion: 'SHUTDOWN',
+        guidance: 'GEOLOGIC WITNESS',
+        commsBand: 'COSMIC MEMORY',
+        dataRateBps: 'MILLENNIAL WITNESS',
+      },
+    },
+    {
+      beatIndex: 5,
+      startProgress: 0.8,
+      endProgress: 1.0,
+      code: 'CH14.B5 · THE QUIET MONUMENTS',
+      title: 'Final Epilogue: Humanity\'s Quiet Monuments of Extraterrestrial Exploration',
+      metTimestamp: 'EPILOGUE · ETERNAL',
+      missionCallout: `"AFTERLIGHT: They remain where they fell, not as debris, but as the quiet monuments of human curiosity."`,
+      technicalNarrative: `Every fallen lander, discarded descent stage, and resting rover stands as an enduring archaeological testament to the species that reached beyond its cradle to touch the stars.`,
+      firstPersonThought:
+        'We were the scouts of Earth. We answered the question of what lay beyond the dark. And here, in the quiet dust of other worlds, we belong to eternity.',
+      subSystemStatus: {
+        propulsion: 'SHUTDOWN',
+        guidance: 'QUIET MONUMENT',
+        commsBand: 'HUMAN HERITAGE',
+        dataRateBps: 'ETERNAL HERITAGE',
       },
     },
   ];
@@ -1396,7 +1588,7 @@ export function computeLiveChoreographyTelemetry(
     hullTempC = isMoon ? -178 : -88 - clamped * 25;
     signalStrengthDbm = Math.round(-128 - clamped * 48);
     powerWatts = Math.max(0, Math.round((1 - clamped) * 125));
-  } else {
+  } else if (chapter === 12) {
     // CH 12: Orbital Reconnaissance Overflight (LRO / MRO Sub-Meter Swath Pass)
     altitudeKm = 0.0;
     velocityKmS = 0.0;
@@ -1404,28 +1596,81 @@ export function computeLiveChoreographyTelemetry(
     hullTempC = isMoon ? -15 : -42;
     signalStrengthDbm = -108;
     powerWatts = 0;
+  } else if (chapter === 13) {
+    // CH 13: Legacy Deep-Space Scientific Observatory (DSN 70m, 1420MHz H-Line & IR Radiometry)
+    altitudeKm = 0.0;
+    velocityKmS = 0.0;
+    gLoad = isMoon ? 0.165 : isMars ? 0.379 : 0.14;
+    hullTempC = isMoon ? -22 : -55;
+    signalStrengthDbm = -96; // High SNR in DSN correlator
+    powerWatts = 0;
+  } else {
+    // CH 14: The Quiet Monuments (Cinematic Ending & Archaeological Epilogue)
+    altitudeKm = 0.0;
+    velocityKmS = 0.0;
+    gLoad = isMoon ? 0.165 : isMars ? 0.379 : 0.14;
+    hullTempC = isMoon ? -35 : -62;
+    signalStrengthDbm = -135;
+    powerWatts = 0;
   }
 
-  const spectralPeaks = isMars
-    ? [
-        {
-          label: 'Fe³⁺ Jarosite / Hematite',
-          wavelengthNm: '532 nm / 14.4 keV',
-          intensity: Math.round(78 + Math.sin(clamped * 12) * 18),
-        },
-        {
-          label: 'Mg/Fe Phyllosilicate Smectite',
-          wavelengthNm: '2,310 nm NIR',
-          intensity: Math.round(64 + Math.cos(clamped * 10) * 22),
-        },
-        {
-          label: 'CO₂ / Ar Atmospheric Line',
-          wavelengthNm: '4,260 nm TIR',
-          intensity: Math.round(85 + Math.sin(clamped * 8) * 12),
-        },
-      ]
-    : isMoon
-    ? [
+  const spectralPeaks =
+    chapter === 13
+      ? [
+          {
+            label: 'Neutral Hydrogen 21cm Line',
+            wavelengthNm: '1,420.405 MHz',
+            intensity: Math.round(96 + Math.sin(clamped * 16) * 4),
+          },
+          {
+            label: 'Water Maser Spectral Emission',
+            wavelengthNm: '22.235 GHz',
+            intensity: Math.round(84 + Math.cos(clamped * 12) * 12),
+          },
+          {
+            label: 'MRO/LROC Calibrated Infrared Band',
+            wavelengthNm: '2,310 nm CRISM',
+            intensity: Math.round(79 + Math.sin(clamped * 10) * 15),
+          },
+        ]
+      : chapter === 14
+      ? [
+          {
+            label: 'Tranquillity Laser Retroreflector',
+            wavelengthNm: '532.0 nm Nd:YAG',
+            intensity: Math.round(98 + Math.sin(clamped * 6) * 2),
+          },
+          {
+            label: 'Ancient Basalt Weathering Rind',
+            wavelengthNm: '1,050 nm Fe²⁺',
+            intensity: Math.round(72 + Math.cos(clamped * 8) * 14),
+          },
+          {
+            label: 'Voyager Interstellar Carrier Harmonics',
+            wavelengthNm: '2,295.0 MHz',
+            intensity: Math.round(89 + Math.sin(clamped * 10) * 8),
+          },
+        ]
+      : isMars
+      ? [
+          {
+            label: 'Fe³⁺ Jarosite / Hematite',
+            wavelengthNm: '532 nm / 14.4 keV',
+            intensity: Math.round(78 + Math.sin(clamped * 12) * 18),
+          },
+          {
+            label: 'Mg/Fe Phyllosilicate Smectite',
+            wavelengthNm: '2,310 nm NIR',
+            intensity: Math.round(64 + Math.cos(clamped * 10) * 22),
+          },
+          {
+            label: 'CO₂ / Ar Atmospheric Line',
+            wavelengthNm: '4,260 nm TIR',
+            intensity: Math.round(85 + Math.sin(clamped * 8) * 12),
+          },
+        ]
+      : isMoon
+      ? [
         {
           label: 'LRRR 532nm Nd:YAG Return Pulse',
           wavelengthNm: '532.0 nm',

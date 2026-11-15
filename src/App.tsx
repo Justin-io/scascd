@@ -10,6 +10,9 @@ import {
   Play,
   RotateCcw,
   Sliders,
+  Sparkles,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-react';
 import {
@@ -54,10 +57,12 @@ import {
   CinemaCameraMode,
   computeLiveChoreographyTelemetry,
 } from './utils/storyChoreographyEngine';
+import { VoiceOfLeftBehindScrollExperience } from './components/VoiceOfLeftBehindScrollExperience';
+import { spaceAudio } from './utils/audioManager';
 
 export default function App() {
   const [viewportMode, setViewportMode] = useState<ViewportMode>('solar_system');
-  const [selectedBodyId, setSelectedBodyId] = useState<CelestialBodyId>('moon');
+  const [selectedBodyId, setSelectedBodyId] = useState<CelestialBodyId>('sun');
   const [selectedArtifactId, setSelectedArtifactId] = useState<string>(
     'ART-APOLLO11-LM-DS'
   );
@@ -65,6 +70,9 @@ export default function App() {
   const [isBottomDockCollapsed, setIsBottomDockCollapsed] = useState<boolean>(false);
   const [isInfoCardHidden, setIsInfoCardHidden] = useState<boolean>(false);
   const [isSceneOptionsOpen, setIsSceneOptionsOpen] = useState<boolean>(false);
+  const [isScrollStoryActive, setIsScrollStoryActive] = useState<boolean>(true);
+  const [activeStorySection, setActiveStorySection] = useState<'hero' | 'moon' | 'mars' | 'lab'>('hero');
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(() => spaceAudio.getIsMuted());
 
   const [layerVisibility, setLayerVisibility] = useState<LayerVisibilityState>({
     showArtifacts: true,
@@ -143,23 +151,54 @@ export default function App() {
     [selectedArtifact, activeStoryChapter, storyProgress]
   );
 
-  // Advance 12-Chapter 3D Storyline Animation Progress when in `story_cinema` mode
+  const activeMediaAsset = useMemo(
+    () =>
+      MEDIA_ASSETS.find((m) => m.artifactId === selectedArtifact.id) ||
+      MEDIA_ASSETS[0],
+    [selectedArtifact.id]
+  );
+  const chapterDurationSec = activeMediaAsset.durationSec;
+
+  // Advance 12-Chapter 3D Storyline Animation Progress matching EXACT archival video duration
   useEffect(() => {
-    if (viewportMode !== 'story_cinema' || !isStoryPlaying) return;
+    if (viewportMode !== 'story_cinema' || !isStoryPlaying) {
+      spaceAudio.stopStoryAudio();
+      return;
+    }
+
+    // Synchronize and play authentic historical mission video audio (CH 1 to CH 4 play rocket space travel audio)
+    void spaceAudio.startStoryAudio(selectedArtifact.id, storyProgress, undefined, 0.35, activeStoryChapter);
+
+    const tickMs = 50;
+    const progressPerTick = (tickMs / 1000) / chapterDurationSec;
+
     const interval = window.setInterval(() => {
       setStoryProgress((prev) => {
-        const next = prev + 0.004;
+        const next = prev + progressPerTick;
         if (next >= 1.0) {
           if (autoAdvanceChapters) {
-            setActiveStoryChapter((ch) => ((ch % 12) + 1) as StoryChapterNumber);
+            setActiveStoryChapter((ch) => ((ch % 14) + 1) as StoryChapterNumber);
+            return 0.0;
+          } else {
+            setIsStoryPlaying(false);
+            return 1.0;
           }
-          return 0.0;
         }
         return next;
       });
-    }, 80);
-    return () => window.clearInterval(interval);
-  }, [viewportMode, isStoryPlaying, autoAdvanceChapters]);
+    }, tickMs);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [
+    viewportMode,
+    isStoryPlaying,
+    autoAdvanceChapters,
+    chapterDurationSec,
+    activeStoryChapter,
+    selectedArtifact.id,
+  ]);
 
   // Keyboard shortcuts: Escape closes workspace modal or scene options, 'h' toggles Zen Mode
   useEffect(() => {
@@ -196,6 +235,13 @@ export default function App() {
   const handleSelectArtifactFrom3D = (artifactId: string) => {
     const art = ARTIFACT_RECORDS.find((a) => a.id === artifactId);
     if (!art) return;
+
+    if (art.proceduralModelType === 'lander') {
+      spaceAudio.playLandingIncreasingThruster();
+    } else if (art.proceduralModelType === 'rover') {
+      spaceAudio.playLandingTouchdownContact();
+    }
+
     setSelectedArtifactId(art.id);
     setSelectedBodyId(art.bodyId);
   };
@@ -223,13 +269,14 @@ export default function App() {
     setActiveWorkspace('none');
   };
 
-  const handleLaunchStoryCinema = (chapter: StoryChapterNumber = 6) => {
+  const handleLaunchStoryCinema = (chapter: StoryChapterNumber = 1) => {
     setActiveWorkspace('none');
     setIsSceneOptionsOpen(false);
     setActiveStoryChapter(chapter);
-    setStoryProgress(0.05);
+    setStoryProgress(0.0);
     setIsStoryPlaying(true);
     setViewportMode('story_cinema');
+    void spaceAudio.startStoryAudio(selectedArtifact.id, 0.0, undefined, 0.35, chapter);
   };
 
   const primaryArtCoord = getPrimaryCoordinate(selectedArtifact);
@@ -276,119 +323,184 @@ export default function App() {
         onHoverObjectLabel={setHoverLabel}
       />
 
-      {/* 2. CLEAN 3-ZONE TOP NAVIGATION BAR */}
-      <header className="relative z-20 flex items-center justify-between gap-8 px-6 h-14 bg-[#07090E]/92 backdrop-blur-md border-b border-slate-800/90">
-        {/* Zone 1: Brand Wordmark */}
-        <a
-          href="#top"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveWorkspace('none');
-            setIsSceneOptionsOpen(false);
-            setViewportMode('solar_system');
-          }}
-          className="text-lg font-bold tracking-wider text-slate-100 whitespace-nowrap shrink-0 font-display"
-        >
-          AFTERLIGHT
-        </a>
+      {/* 2. THE VOICE OF LEFT BEHIND — GUIDED HERITAGE SCROLL EXPERIENCE */}
+      {isScrollStoryActive &&
+        activeWorkspace === 'none' &&
+        viewportMode !== 'story_cinema' &&
+        viewportMode !== 'hardware_inspector' && (
+          <VoiceOfLeftBehindScrollExperience
+            viewportMode={viewportMode}
+            selectedBodyId={selectedBodyId}
+            selectedArtifactId={selectedArtifactId}
+            onSwitchViewportMode={setViewportMode}
+            onSelectBody={handleSelectBody}
+            onSelectArtifact={handleSelectArtifactFrom3D}
+            onOpenWorkspace={setActiveWorkspace}
+            onLaunchStoryCinema={handleLaunchStoryCinema}
+            onToggleFreeOrbit={() => setIsScrollStoryActive(false)}
+            onActiveSectionChange={setActiveStorySection}
+          />
+        )}
 
-        {/* Zone 2: 5 Clear Navigation Links */}
-        <nav
-          aria-label="Primary Scientific Workspaces"
-          className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-300"
-        >
-          <button
-            type="button"
-            onClick={() =>
-              setActiveWorkspace(
-                activeWorkspace === 'search_catalog' ? 'none' : 'search_catalog'
-              )
-            }
-            className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
-              activeWorkspace === 'search_catalog' ? 'text-cyan-400 underline' : ''
-            }`}
-          >
-            Artifact Catalog
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (viewportMode === 'story_cinema' && activeWorkspace === 'none') {
-                setActiveWorkspace('storytelling');
-              } else {
-                handleLaunchStoryCinema(6);
-              }
+      {/* 3. CLEAN 3-ZONE TOP NAVIGATION BAR (Active in Free 3D Mode or when on Physics Lab) */}
+      {(!isScrollStoryActive ||
+        activeStorySection === 'lab' ||
+        activeWorkspace !== 'none' ||
+        viewportMode === 'story_cinema' ||
+        viewportMode === 'hardware_inspector') && (
+        <header className="relative z-20 flex items-center justify-between gap-8 px-6 h-14 bg-[#07090E]/92 backdrop-blur-md border-b border-slate-800/90">
+          {/* Zone 1: Brand Wordmark */}
+          <a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveWorkspace('none');
+              setIsSceneOptionsOpen(false);
+              setViewportMode('solar_system');
+              setIsScrollStoryActive(true);
             }}
-            className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
-              viewportMode === 'story_cinema' || activeWorkspace === 'storytelling'
-                ? 'text-cyan-400 underline'
-                : ''
-            }`}
+            className="text-lg font-bold tracking-wider text-slate-100 whitespace-nowrap shrink-0 font-display"
           >
-            Storytelling
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActiveWorkspace(
-                activeWorkspace === 'timeline_legacy' ? 'none' : 'timeline_legacy'
-              )
-            }
-            className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
-              activeWorkspace === 'timeline_legacy' ? 'text-cyan-400 underline' : ''
-            }`}
-          >
-            Timeline & Graph
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActiveWorkspace(
-                activeWorkspace === 'media_pipeline' ? 'none' : 'media_pipeline'
-              )
-            }
-            className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
-              activeWorkspace === 'media_pipeline' ? 'text-cyan-400 underline' : ''
-            }`}
-          >
-            Media Lab
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              setActiveWorkspace(
-                activeWorkspace === 'education_academy' ? 'none' : 'education_academy'
-              )
-            }
-            className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
-              activeWorkspace === 'education_academy' ? 'text-cyan-400 underline' : ''
-            }`}
-          >
-            Academy
-          </button>
-        </nav>
+            AFTERLIGHT
+          </a>
 
-        {/* Zone 3: Single Primary Action */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={() =>
-              setActiveWorkspace(
-                activeWorkspace === 'artifact_dossier' ? 'none' : 'artifact_dossier'
-              )
-            }
-            className="px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-500 hover:bg-cyan-400 rounded-md transition-colors whitespace-nowrap shrink-0"
+          {/* Zone 2: 5 Clear Navigation Links */}
+          <nav
+            aria-label="Primary Scientific Workspaces"
+            className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-300"
           >
-            Inspect Dossier
-          </button>
-        </div>
-      </header>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveWorkspace(
+                  activeWorkspace === 'search_catalog' ? 'none' : 'search_catalog'
+                )
+              }
+              className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
+                activeWorkspace === 'search_catalog' ? 'text-cyan-400 underline' : ''
+              }`}
+            >
+              Artifact Catalog
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (viewportMode === 'story_cinema' && activeWorkspace === 'none') {
+                  setActiveWorkspace('storytelling');
+                } else {
+                  handleLaunchStoryCinema(6);
+                }
+              }}
+              className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
+                viewportMode === 'story_cinema' || activeWorkspace === 'storytelling'
+                  ? 'text-cyan-400 underline'
+                  : ''
+              }`}
+            >
+              Storytelling
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveWorkspace(
+                  activeWorkspace === 'timeline_legacy' ? 'none' : 'timeline_legacy'
+                )
+              }
+              className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
+                activeWorkspace === 'timeline_legacy' ? 'text-cyan-400 underline' : ''
+              }`}
+            >
+              Timeline & Graph
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveWorkspace(
+                  activeWorkspace === 'media_pipeline' ? 'none' : 'media_pipeline'
+                )
+              }
+              className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
+                activeWorkspace === 'media_pipeline' ? 'text-cyan-400 underline' : ''
+              }`}
+            >
+              Media Lab
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setActiveWorkspace(
+                  activeWorkspace === 'education_academy' ? 'none' : 'education_academy'
+                )
+              }
+              className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
+                activeWorkspace === 'education_academy' ? 'text-cyan-400 underline' : ''
+              }`}
+            >
+              Academy
+            </button>
+          </nav>
+
+          {/* Zone 3: Primary Action + Audio Mute + Return to Story Scroll */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                const nextMute = spaceAudio.toggleMute();
+                setIsAudioMuted(nextMute);
+                if (!nextMute) {
+                  spaceAudio.playTelemetryPing();
+                }
+              }}
+              title={isAudioMuted ? 'Unmute Space Audio' : 'Mute Space Audio'}
+              className="p-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded transition-colors flex items-center gap-1.5"
+            >
+              {isAudioMuted ? (
+                <VolumeX className="w-4 h-4 text-rose-400" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-cyan-400" />
+              )}
+              <span className="hidden sm:inline font-mono text-[11px]">
+                {isAudioMuted ? 'Muted' : 'Audio'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveWorkspace('none');
+                setIsScrollStoryActive(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded transition-colors whitespace-nowrap shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Story Scroll (Hero · Moon · Mars)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setActiveWorkspace(
+                  activeWorkspace === 'artifact_dossier' ? 'none' : 'artifact_dossier'
+                )
+              }
+              className="px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-500 hover:bg-cyan-400 rounded-md transition-colors whitespace-nowrap shrink-0"
+            >
+              Inspect Dossier
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* Mobile Sub-Navigation Bar (<768px) */}
-      <nav
-        aria-label="Mobile Scientific Workspaces"
-        className="relative z-20 flex md:hidden items-center gap-2 px-4 py-2 bg-[#07090E]/95 border-b border-slate-800 overflow-x-auto text-xs font-medium text-slate-300"
-      >
+      {(!isScrollStoryActive ||
+        activeStorySection === 'lab' ||
+        activeWorkspace !== 'none' ||
+        viewportMode === 'story_cinema' ||
+        viewportMode === 'hardware_inspector') && (
+        <nav
+          aria-label="Mobile Scientific Workspaces"
+          className="relative z-20 flex md:hidden items-center gap-2 px-4 py-2 bg-[#07090E]/95 border-b border-slate-800 overflow-x-auto text-xs font-medium text-slate-300"
+        >
         <button
           type="button"
           onClick={() =>
@@ -461,6 +573,7 @@ export default function App() {
           Academy
         </button>
       </nav>
+      )}
 
       {/* 3A. CLEAN 12-CHAPTER STORY CINEMA HUD (When in `story_cinema` mode) */}
       {activeWorkspace === 'none' && viewportMode === 'story_cinema' && (
@@ -475,6 +588,7 @@ export default function App() {
               onScrubProgress={(p) => {
                 setIsStoryPlaying(false);
                 setStoryProgress(p);
+                spaceAudio.stopStoryAudio();
               }}
             />
           )}
@@ -490,13 +604,15 @@ export default function App() {
             cameraMode={cinemaCameraMode}
             showMotionGraphics={showMotionGraphics}
             telemetry={liveTelemetry}
+            chapterDurationSec={chapterDurationSec}
             onSelectChapter={(ch) => {
               setActiveStoryChapter(ch);
-              setStoryProgress(0.05);
+              setStoryProgress(0.0);
             }}
             onScrubProgress={(p) => {
               setIsStoryPlaying(false);
               setStoryProgress(p);
+              spaceAudio.stopStoryAudio();
             }}
             onTogglePlay={() => setIsStoryPlaying((p) => !p)}
             onToggleAutoAdvance={() => setAutoAdvanceChapters((a) => !a)}
@@ -510,7 +626,9 @@ export default function App() {
       )}
 
       {/* 3B. CLEAN, COLLAPSIBLE TOP-LEFT TARGET SUMMARY CARD (Solar System / Globe / 3D Spacecraft) */}
-      {activeWorkspace === 'none' && viewportMode !== 'story_cinema' && (
+      {(!isScrollStoryActive || activeStorySection === 'lab') &&
+        activeWorkspace === 'none' &&
+        viewportMode !== 'story_cinema' && (
         isInfoCardHidden ? (
           <button
             type="button"
@@ -934,6 +1052,15 @@ export default function App() {
                   >
                     Open Dossier
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => spaceAudio.playLandingSequence()}
+                    title="Play Full 7.05s Landing Sequence: Increasing Thrusters (3.8s) → Touchdown Contact (0.65s) → Pressure Release (2.6s)"
+                    className="px-2.5 py-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-cyan-300 hover:text-white border border-cyan-500/40 rounded flex items-center gap-1.5 transition-colors"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                    Landing Audio (7.0s)
+                  </button>
                 </div>
               </>
             )}
@@ -1007,8 +1134,8 @@ export default function App() {
         />
       )}
 
-      {/* 5. STREAMLINED, EASY-TO-USE BOTTOM NAVIGATION DOCK */}
-      {activeWorkspace === 'none' && (
+      {/* 5. STREAMLINED, EASY-TO-USE BOTTOM NAVIGATION DOCK (Active in Free 3D Mode or on Physics Lab) */}
+      {(!isScrollStoryActive || activeStorySection === 'lab') && activeWorkspace === 'none' && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 w-max max-w-[96vw] flex flex-col items-center pointer-events-none">
           {/* Scene Options Popover (Only opens when user clicks "Scene Options") */}
           {!isBottomDockCollapsed && isSceneOptionsOpen && (
@@ -1071,7 +1198,11 @@ export default function App() {
                       max={1}
                       step={0.02}
                       value={explodedFactor}
-                      onChange={(e) => setExplodedFactor(parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setExplodedFactor(val);
+                        spaceAudio.playExplodedSlide();
+                      }}
                       className="w-28 accent-cyan-400 cursor-pointer"
                     />
                     <span className="text-xs font-mono text-cyan-400 w-10 text-right tabular-nums">
@@ -1193,6 +1324,17 @@ export default function App() {
                 aria-label="3D Viewport Mode"
                 className="flex flex-wrap items-center bg-[#07090E] p-1 rounded-md border border-slate-800/90 gap-1"
               >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsScrollStoryActive(true);
+                    setViewportMode('solar_system');
+                  }}
+                  className="px-2.5 py-1 text-xs font-semibold rounded transition-colors whitespace-nowrap bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40"
+                  title="Switch back to Guided Heritage Story Scroll"
+                >
+                  ✦ Story Scroll
+                </button>
                 {(
                   [
                     ['solar_system', 'Solar System'],
@@ -1214,6 +1356,8 @@ export default function App() {
                         handleSelectBody('moon');
                       } else if (modeId === 'mars_globe') {
                         handleSelectBody('mars');
+                      } else if (modeId === 'solar_system') {
+                        handleSelectBody('sun');
                       }
                     }}
                     className={`px-2.5 py-1 text-xs font-medium rounded transition-colors whitespace-nowrap ${
