@@ -119,14 +119,14 @@ export interface ArtifactCoordinates {
 export interface ScientificSource {
   id: string;
   archiveName:
-    | 'NASA PDS'
-    | 'NASA NSSDC'
-    | 'LROC / LRO'
-    | 'NASA Human Artifacts Catalog'
-    | 'MER / MRO HiRISE Archive'
-    | 'NAIF SPICE'
-    | 'JPL Horizons'
-    | 'NASA Image and Video Library';
+  | 'NASA PDS'
+  | 'NASA NSSDC'
+  | 'LROC / LRO'
+  | 'NASA Human Artifacts Catalog'
+  | 'MER / MRO HiRISE Archive'
+  | 'NAIF SPICE'
+  | 'JPL Horizons'
+  | 'NASA Image and Video Library';
   title: string;
   citation: string;
   url: string;
@@ -142,12 +142,12 @@ export interface ScientificClaim {
   statement: string;
   evidenceUrl: string;
   evidenceType:
-    | 'Orbital Optical Imagery'
-    | 'Radio Doppler / VLBI Telemetry'
-    | 'In-Situ Spectrometer Data'
-    | 'Laser Ranging Retroreflector'
-    | 'Mission Flight Log / NSSDC Record'
-    | 'Seismic Telemetry';
+  | 'Orbital Optical Imagery'
+  | 'Radio Doppler / VLBI Telemetry'
+  | 'In-Situ Spectrometer Data'
+  | 'Laser Ranging Retroreflector'
+  | 'Mission Flight Log / NSSDC Record'
+  | 'Seismic Telemetry';
   verificationStatus: VerificationStatus;
   uncertaintyNotes: string;
   reviewTimestamp: string;
@@ -236,13 +236,13 @@ export interface MissionEvent {
   bodyId: CelestialBodyId;
   date: string;
   eventType:
-    | 'Launch'
-    | 'Landing'
-    | 'Milestone'
-    | 'Observation'
-    | 'Extended Mission'
-    | 'Last Communication'
-    | 'Discovery';
+  | 'Launch'
+  | 'Landing'
+  | 'Milestone'
+  | 'Observation'
+  | 'Extended Mission'
+  | 'Last Communication'
+  | 'Discovery';
   title: string;
   description: string;
   claimId: string;
@@ -251,12 +251,12 @@ export interface MissionEvent {
 export interface LegacyNode {
   id: string;
   type:
-    | 'Mission'
-    | 'Artifact'
-    | 'Instrument'
-    | 'Observation'
-    | 'Discovery'
-    | 'Later Mission';
+  | 'Mission'
+  | 'Artifact'
+  | 'Instrument'
+  | 'Observation'
+  | 'Discovery'
+  | 'Later Mission';
   label: string;
   sublabel: string;
   bodyId: CelestialBodyId;
@@ -332,11 +332,11 @@ export interface MediaJobRecord {
   jobId: string;
   assetId: string;
   operation:
-    | 'ffprobe_inspect'
-    | 'extract_thumbnail'
-    | 'transcode_h264'
-    | 'generate_contact_sheet'
-    | 'normalize_audio';
+  | 'ffprobe_inspect'
+  | 'extract_thumbnail'
+  | 'transcode_h264'
+  | 'generate_contact_sheet'
+  | 'normalize_audio';
   status: 'completed' | 'running' | 'failed';
   commandArgs: string[];
   startedAt: string;
@@ -368,10 +368,10 @@ export interface EducationalChallenge {
   id: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   challengeType:
-    | 'artifact_identification'
-    | 'instrument_matching'
-    | 'timeline_reconstruction'
-    | 'discovery_evidence';
+  | 'artifact_identification'
+  | 'instrument_matching'
+  | 'timeline_reconstruction'
+  | 'discovery_evidence';
   question: string;
   contextClue: string;
   artifactId: string;
