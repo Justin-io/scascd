@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AFTERLIGHT — Project Presentation Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(15, 23, 42, 0.75);
+      --bg-card-border: rgba(56, 189, 248, 0.25);
+      --accent-cyan: #38bdf8;
+      --accent-amber: #fbbf24;
+      --accent-emerald: #34d399;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      user-select: none;
+    }
+
+    /* Ambient Space Glow */
+    .space-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, rgba(7, 9, 14, 0) 70%);
+      top: -100px;
+      right: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .space-glow-2 {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(251, 191, 36, 0.06) 0%, rgba(7, 9, 14, 0) 70%);
+      bottom: -100px;
+      left: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Presentation Header & Controls */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: rgba(7, 9, 14, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 50;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      color: var(--accent-cyan);
+    }
+
+    .logo-badge span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.85rem;
+      letter-spacing: normal;
+    }
+
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(71, 85, 105, 0.6);
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    .btn-primary {
+      background: var(--accent-cyan);
+      color: #07090e;
+      border-color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: #7dd3fc;
+      color: #07090e;
+    }
+
+    /* Slide Progress Bar */
+    .progress-bar-container {
+      position: fixed;
+      top: 52px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(30, 41, 59, 0.8);
+      z-index: 50;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-amber));
+      width: 0%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Main Deck Stage */
+    main {
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 52px);
+      margin-top: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      z-index: 10;
+    }
+
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1200px;
+      height: 80%;
+      max-height: 720px;
+      background: rgba(11, 15, 25, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 48px 60px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.05);
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Slide Elements */
+    .slide-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent-amber);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .slide-subtitle {
+      font-size: 1.15rem;
+      color: var(--accent-cyan);
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      height: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      border-radius: 10px;
+      padding: 18px 22px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+
+    .feature-card h4 {
+      color: var(--accent-cyan);
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-card p, .feature-card ul {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .feature-card ul {
+      padding-left: 18px;
+      margin-top: 6px;
+    }
+
+    .feature-card li {
+      margin-bottom: 4px;
+    }
+
+    .highlight-banner {
+      background: rgba(30, 41, 59, 0.7);
+      border-left: 4px solid var(--accent-cyan);
+      padding: 14px 20px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: #e2e8f0;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      margin-right: 6px;
+    }
+    .tag-cyan { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .tag-amber { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .tag-emerald { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+
+    /* Code & Terminal Blocks */
+    pre, code.terminal-box {
+      background: #05070c;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      line-height: 1.45;
+    }
+
+    /* Table styling */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+    }
+    table.data-table th {
+      text-align: left;
+      padding: 8px 12px;
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--accent-cyan);
+      border-bottom: 1px solid #334155;
+    }
+    table.data-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      color: #cbd5e1;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid rgba(51, 65, 85, 0.4);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Speaker Notes Drawer */
+    #speaker-notes-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 140px;
+      background: rgba(11, 15, 25, 0.95);
+      border-top: 2px solid var(--accent-amber);
+      backdrop-filter: blur(16px);
+      padding: 16px 32px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 60;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    #speaker-notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    .notes-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .notes-content {
+      line-height: 1.45;
+      overflow-y: auto;
+    }
+
+    /* Floating Navigation Pill */
+    .nav-pill {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 30px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+      z-index: 50;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .nav-pill button {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .nav-pill button:hover {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-cyan);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      min-width: 60px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="space-glow"></div>
+  <div class="space-glow-2"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-badge">
+      AFTERLIGHT
+      <span>/ Planetary Archaeology &amp; Deep Space Heritage</span>
+    </div>
+    <div class="deck-controls">
+      <span class="tag tag-cyan">NASA Space Apps 2026</span>
+      <button class="btn" id="notes-btn" title="Toggle Speaker Notes [N]">Notes [N]</button>
+      <button class="btn" id="fs-btn" title="Toggle Fullscreen [F]">Fullscreen [F]</button>
+      <a href="http://localhost:3000" target="_blank" class="btn btn-primary" title="Launch Live 3D Simulation">Launch Live App ↗</a>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <!-- Slide Stage -->
+  <main id="slide-stage">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide active" data-notes="Welcome to AFTERLIGHT. This platform bridges aerospace engineering, historical planetary archaeology, and interactive real-time 3D spatial simulation to preserve and narrate humanity's robotic and crewed exploration heritage across celestial worlds.">
+      <div class="slide-eyebrow">
+        <span>●</span> Mission Briefing &amp; Technical Presentation
+      </div>
+      <h1 class="slide-title">AFTERLIGHT</h1>
+      <h2 class="slide-subtitle">Planetary Archaeology, Deep Space Heritage &amp; 3D Spatial Storytelling</h2>
+      <div class="slide-body">
+        <div class="highlight-banner">
+          <strong>Preserving Humanity's Footprints Across the Solar System</strong><br>
+          An interactive 3D WebGL engine, scientific provenance catalog, 14-chapter mission choreographic suite, and physically grounded space acoustic simulator.
+        </div>
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="feature-card">
+            <h4>Scientific &amp; Technical Foundation</h4>
+            <ul>
+              <li><strong>NASA PDS &amp; LROC Ground-Truth</strong>: Centimeter-accurate landing &amp; rover traverses.</li>
+              <li><strong>Three.js WebGL Spatial Canvas</strong>: Real-time heliocentric solar system &amp; globes.</li>
+              <li><strong>React 19 &amp; Vite 8</strong>: Zero-latency reactive state and hardened architecture.</li>
+            </ul>
+          </div>
+          <div class="feature-card" style="font-family: var(--font-mono); font-size: 0.85rem;">
+            <h4>Operational Status</h4>
+            <p style="color: #34d399; margin-bottom: 6px;">● ALL SYSTEMS OPERATIONAL</p>
+            <p>WORLDS MAPPED: 22 Satellites + Moon + Mars</p>
+            <p>ARTIFACT CATALOG: 12 Historical Vehicles</p>
+            <p>ACOUSTIC SUITE: 48 kHz Grounded Sound</p>
+            <p>UNIT TESTS: 10/10 Automated Suites Passing</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>AFTERLIGHT · NASA Space Apps Challenge 2026</span>
+        <span>Use [←] and [→] or Spacebar to navigate</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem Statement -->
+    <div class="slide" data-notes="Why does AFTERLIGHT exist? Right now, humanity is returning to the Moon with Artemis and preparing for Mars. As commercial and international space exploration expands, protecting historic landing sites like Tranquillity Base or Jezero Crater becomes critical. We need an authoritative, visually engaging, and scientifically rigorous archive.">
+      <div class="slide-eyebrow"><span>●</span> The Problem &amp; Scientific Urgency</div>
+      <h2 class="slide-title">The Peril of Vanishing Space Heritage</h2>
+      <div class="slide-subtitle">Degradation, Dispersion, and the Need for a Digital Twin</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>1. Physical Degradation in Deep Space</h4>
+            <p>Over 70 humanity-crafted landers, rovers, and probes reside across celestial bodies. Without protective atmospheres on the Moon or under micrometeorite bombardment and dust storms on Mars, physical sites face micro-erosion, solar UV degradation, and thermal stress.</p>
+          </div>
+          <div class="feature-card">
+            <h4>2. Fragmented Historical Provenance</h4>
+            <p>Coordinates, telemetry, mission reports, and scientific claims are scattered across disparate NASA PDS volumes, Soviet archival releases, and academic papers with conflicting coordinates.</p>
+          </div>
+        </div>
+        <div class="highlight-banner" style="border-left-color: var(--accent-amber);">
+          <strong>The AFTERLIGHT Imperative:</strong> Deliver an authoritative, mathematically verified 3D digital twin of humanity's lunar and Martian heritage with exact coordinates, authentic telemetry, and multi-chapter cinematic storytelling.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Problem Definition</span>
+        <span>Slide 2 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Executive Solution -->
+    <div class="slide" data-notes="AFTERLIGHT delivers six interconnected pillars: a multi-mode 3D spatial engine, an authoritative archaeological catalog, a 14-chapter choreographic story rig, a physical space acoustic engine, a 3D hardware inspector with exploded views, and an interactive educational academy.">
+      <div class="slide-eyebrow"><span>●</span> System Overview</div>
+      <h2 class="slide-title">A Unified Epistemic 3D Simulation Engine</h2>
+      <div class="slide-subtitle">Six Core Pillars Bridging Science, History, and Interactivity</div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="feature-card">
+            <h4>1. 3D Spatial Canvas</h4>
+            <p>Heliocentric solar system, LROC 3D Moon globe, MOLA Mars globe, and 22 natural satellite worlds with GLSL shaders.</p>
+          </div>
+          <div class="feature-card">
+            <h4>2. Planetary Archaeology</h4>
+            <p>Ground-truth NASA PDS coordinates tracking landing, final operating, and orbital reconnaissance locations.</p>
+          </div>
+          <div class="feature-card">
+            <h4>3. Story Cinema Rig</h4>
+            <p>14 choreographic chapters, 70 synchronized micro-beats, live aerodynamic telemetry, and historical NASA audio.</p>
+          </div>
+          <div class="feature-card">
+            <h4>4. Space Acoustic Suite</h4>
+            <p>Physical vacuum acoustics, 24s dual-part increasing thruster cushion, and zero-latency immediate pause.</p>
+          </div>
+          <div class="feature-card">
+            <h4>5. 3D Hardware Inspector</h4>
+            <p>Exploded-view CAD disassembly (0-100%) and photorealistic PBR aerospace materials (Kapton foil, solar silicon).</p>
+          </div>
+          <div class="feature-card">
+            <h4>6. Educational Academy</h4>
+            <p>Interactive tiered space challenges, automated grading engine, and sandboxed FFmpeg media intelligence lab.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Solution Architecture</span>
+        <span>Slide 3 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Architecture & Tech Stack -->
+    <div class="slide" data-notes="Our tech stack is modern and hardened. Built on React 19 and Three.js with strict TypeScript types. The backend runs Express with OWASP-compliant security headers and a sandboxed media processing pipeline.">
+      <div class="slide-eyebrow"><span>●</span> Technical Infrastructure</div>
+      <h2 class="slide-title">System Architecture &amp; Technology Stack</h2>
+      <div class="slide-subtitle">Hardened Full-Stack Reactive Architecture</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Frontend Technology Stack</h4>
+            <ul>
+              <li><strong>React 19 &amp; TypeScript (Strict Mode)</strong>: Component lifecycle, state management, and strict domain schemas.</li>
+              <li><strong>Three.js (r187) &amp; WebGL 2.0</strong>: Scene graphs, dual-mode astronomy scales, dynamic lighting, and custom shaders.</li>
+              <li><strong>Tailwind CSS v4 &amp; Lucide Icons</strong>: Aerospace telemetry aesthetic, HUD reticles, and responsive docking panes.</li>
+              <li><strong>Web Audio API</strong>: Low-latency sample scheduling, parametric synthesis fallbacks, and rate-limiting busses.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>Backend &amp; Security Engineering</h4>
+            <ul>
+              <li><strong>Node.js &amp; Express 4</strong>: Hardened REST API gateway and high-performance static asset streaming.</li>
+              <li><strong>OWASP Defense in Depth</strong>: Strict Content Security Policy (CSP), anti-clickjacking headers, and CORS restrictions.</li>
+              <li><strong>FFmpeg / FFprobe Media Worker</strong>: Sandboxed subprocess media analysis with path-traversal prevention.</li>
+              <li><strong>Automated Test Harness</strong>: Built-in <code>node:test</code> runner validating 100% of scientific records.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Technical Stack</span>
+        <span>Slide 4 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: 3D Celestial Engine -->
+    <div class="slide" data-notes="The user can seamlessly zoom from a wide heliocentric view of the Solar System down to millimeter-accurate landing coordinates on the Moon or Mars. We render real traverse polylines mapped directly from NASA mission telemetry.">
+      <div class="slide-eyebrow"><span>●</span> 3D Graphics Engineering</div>
+      <h2 class="slide-title">The 3D Celestial Spatial Engine</h2>
+      <div class="slide-subtitle">Multi-Viewport Planetary &amp; Topographic Exploration</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>1. Heliocentric Solar System</h4>
+            <ul>
+              <li>8 Planets + Sun with accurate orbital semi-major axes and Keplerian eccentricities.</li>
+              <li>GLSL Fresnel atmospheric rim lighting and instanced 1,200-body asteroid belt.</li>
+              <li>Interactive orbit lines, gravitational well depth shaders, and speed scaling.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>2. Lunar &amp; Martian Globes</h4>
+            <ul>
+              <li><strong>LROC Lunar Globe</strong>: LROC WAC basemap, lat/lon coordinate graticule, and rover traverse polylines (<em>Lunokhod 2</em> 39.1 km, <em>Apollo 15 LRV</em> 27.76 km).</li>
+              <li><strong>MOLA Mars Globe</strong>: USGS Mars MOLA topography highlighting hemispheric elevation dichotomy, <em>Opportunity</em> (45.16 km), and <em>Perseverance</em> (31.8 km).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>3D Visualization</span>
+        <span>Slide 5 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: 22 Natural Satellites -->
+    <div class="slide" data-notes="We expanded the simulation beyond just the Moon and Mars to encompass 22 major natural satellites across six planetary systems. We model their true physical dimensions, retrograde orbits, and parent planet sky visibility.">
+      <div class="slide-eyebrow"><span>●</span> Astronomical Precision</div>
+      <h2 class="slide-title">22 Natural Satellite Worlds &amp; True Scale</h2>
+      <div class="slide-subtitle">Bridging Scientific Scale Ratios with Visual Exploration</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Dual Astronomical Scale Engine</h4>
+            <ul>
+              <li><strong>Scientific Exploration Mode</strong>: Logarithmic planet/moon distance scaling allows navigable viewing of massive celestial systems without losing small bodies.</li>
+              <li><strong>True Physical Scale Mode</strong>: Strict 1:1 physical diameter ratios preserve exact planetary proportions (e.g. Jupiter vs Io vs Europa).</li>
+              <li><strong>Parent-Planet Sky Geometry</strong>: Computes exact sky visibility and angular diameter of parent planets as seen from each moon's surface.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>22-World Catalog Highlights</h4>
+            <p><strong>Earth:</strong> Moon · <strong>Mars:</strong> Phobos, Deimos · <strong>Jupiter:</strong> Io, Europa, Ganymede, Callisto, Amalthea · <strong>Saturn:</strong> Titan, Enceladus, Mimas, Iapetus, Rhea, Tethys, Dione · <strong>Uranus:</strong> Miranda, Ariel, Umbriel, Titania, Oberon · <strong>Neptune:</strong> Triton, Proteus, Nereid.</p>
+            <div class="highlight-banner" style="margin-top: 10px; font-size: 0.85rem;">
+              <strong>8 Cinematic Camera Presets:</strong> Grand Reveal, Polar High Angle, Horizon Scrape, Orbit Chase, Surface Telephoto, Ring Plane, Eclipse Shadow, Flyby.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Astronomical Modeling</span>
+        <span>Slide 6 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: 14-Chapter Story Cinema -->
+    <div class="slide" data-notes="Story Cinema is our flagship storytelling feature. It choreographs 14 narrative chapters through 70 synchronized micro-beats. It computes live aerodynamic telemetry and links directly to historical archival records.">
+      <div class="slide-eyebrow"><span>●</span> Cinematic Choreography</div>
+      <h2 class="slide-title">14-Chapter Choreographed Story Cinema</h2>
+      <div class="slide-subtitle">70 Synchronized Micro-Beats &amp; Live Aerodynamic Telemetry</div>
+      <div class="slide-body">
+        <pre class="terminal-box">
+[CH 01-04: Trans-Planetary Cruise]  -->  [CH 05: Powered Descent Initiation]  -->  [CH 06: Terminal Cushion]
+- TLI / Trans-Mars Insertion            - Braking burn ignition (30% throttle)    - Soft throttle ramp (100%)
+- Interplanetary vacuum drift            - Pitch-over maneuver & radar lock        - Oleo strut compression
+- Audio: Deep Space Cruise (12s loop)   - Audio: Soft Thrusters Part 1 (12s)       - Audio: Cushion Thrusters Part 2 (12s)
+
+[CH 07-10: Surface Operations]      -->  [CH 11-12: Science Legacy]            -->  [CH 13-14: Observatory & Heritage]
+- Sample collection & deployment        - Isotope analysis & discoveries          - Modern orbital imaging (LROC/HiRISE)
+- Regolith mobility traverses           - Causal impacts on modern Artemis/MSR     - Eternal cultural legacy on surface
+- Strictly silent atmospheric audio     - Narrative NASA Facts & Archival Docs     - Multi-spectral radar view</pre>
+        <div class="grid-2" style="margin-top: 8px;">
+          <div class="feature-card">
+            <h4>Exact 12.0s Archival Video Sync</h4>
+            <p>Every chapter runs for exactly 12.0 seconds, synchronizing to historical NASA 16mm DAC film and rover entry footage.</p>
+          </div>
+          <div class="feature-card">
+            <h4>Live Physical Telemetry</h4>
+            <p>Calculates altitude ($km$), velocity ($m/s$), dynamic pressure ($kPa$), g-force ($g$), and thermal flux ($kW/m^2$).</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Story Cinema</span>
+        <span>Slide 7 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Acoustic Engine -->
+    <div class="slide" data-notes="Our acoustic engine was engineered to avoid audio clutter. The site is completely quiet on initial load. Sound only plays inside Watch Story Intro for Chapters 1 through 6, featuring a 24-second two-part soft increasing thruster sound that cushions touchdown. When paused, audio halts instantly.">
+      <div class="slide-eyebrow"><span>●</span> Audio Engineering</div>
+      <h2 class="slide-title">Scientific Space Acoustic Suite</h2>
+      <div class="slide-subtitle">Physical Vacuum Acoustics, 24s Soft Increasing Thruster Cushion &amp; Instant Pause</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Strict Chapter-Based Audio Routing</h4>
+            <ul>
+              <li><strong>Absolute Silence on Open/Idle</strong>: Opening or browsing produces zero audio clutter.</li>
+              <li><strong>CH 1 to 4</strong>: <code>rocket_space_travel_12s.wav</code> (soft deep space cruise).</li>
+              <li><strong>CH 5</strong>: <code>landing_increasing_thruster_ch5.wav</code> (Part 1: 12s descent burn).</li>
+              <li><strong>CH 6</strong>: <code>landing_increasing_thruster_ch6.wav</code> (Part 2: 12s terminal cushion to reduce impact).</li>
+              <li><strong>CH 7 to 14</strong>: Strictly silent.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>Instant Pause &amp; Zero Race Conditions</h4>
+            <div class="highlight-banner" style="border-left-color: var(--accent-emerald); margin-bottom: 10px;">
+              <strong>Zero-Latency Audio Cutoff:</strong> Clicking Pause, pressing Spacebar, or scrubbing immediately drops gain to 0 and disconnects all nodes.
+            </div>
+            <ul>
+              <li><strong>Generation-Token Gating</strong>: Prevents async buffer fetches from playing after pause.</li>
+              <li><strong>Timeline Alignment</strong>: Resumes at exact millisecond offset on scrubber.</li>
+              <li><strong>Procedural Fallback</strong>: 48 kHz Web Audio oscillator and brownian noise synth.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Space Acoustics</span>
+        <span>Slide 8 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Planetary Archaeology -->
+    <div class="slide" data-notes="Planetary archaeology requires distinguishing between where a spacecraft landed, where it completed its mission, and where modern orbiters like LROC or HiRISE actually photographed it. We track explicit uncertainty radii for every artifact.">
+      <div class="slide-eyebrow"><span>●</span> Archaeological Provenance</div>
+      <h2 class="slide-title">Planetary Archaeology &amp; Provenance Data</h2>
+      <div class="slide-subtitle">Epistemic Integrity Grounded in NASA Ground-Truth</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Four Coordinate Disciplines</h4>
+            <ol style="padding-left: 18px; line-height: 1.6; font-size: 0.9rem; color: #cbd5e1;">
+              <li><strong>Landing Location</strong>: Initial touchdown point from mission descent telemetry.</li>
+              <li><strong>Final Operating Location</strong>: Last transmission coordinate before power exhaustion or shutdown.</li>
+              <li><strong>Final Documented Location</strong>: Modern coordinate pinpointed by high-resolution orbital reconnaissance (LROC / MRO HiRISE).</li>
+              <li><strong>Impact Location</strong>: Crash coordinate for intentionally crashed ascent stages and orbiters.</li>
+            </ol>
+          </div>
+          <div class="feature-card">
+            <h4>Catalog of 12 Featured Artifacts</h4>
+            <table class="data-table">
+              <thead>
+                <tr><th>Artifact</th><th>Mission</th><th>Body</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Apollo 11 LM</td><td>Apollo 11</td><td>Moon</td><td><span class="tag tag-emerald">VERIFIED</span></td></tr>
+                <tr><td>Apollo 15 LRV</td><td>Apollo 15</td><td>Moon</td><td><span class="tag tag-emerald">VERIFIED</span></td></tr>
+                <tr><td>Lunokhod 2</td><td>Luna 21</td><td>Moon</td><td><span class="tag tag-emerald">VERIFIED</span></td></tr>
+                <tr><td>Opportunity</td><td>MER-B</td><td>Mars</td><td><span class="tag tag-emerald">VERIFIED</span></td></tr>
+                <tr><td>Perseverance</td><td>Mars 2020</td><td>Mars</td><td><span class="tag tag-cyan">ACTIVE</span></td></tr>
+                <tr><td>Cassini</td><td>Cassini</td><td>Saturn</td><td><span class="tag tag-amber">IMPACTED</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Planetary Archaeology</span>
+        <span>Slide 9 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: 3D Hardware Inspector -->
+    <div class="slide" data-notes="Our 3D Hardware Inspector lets students and aerospace engineers explode the spacecraft in 3D space to examine internal avionics, fuel tanks, and thruster nozzles with custom PBR materials simulating thermal blankets and gold Kapton foil.">
+      <div class="slide-eyebrow"><span>●</span> CAD &amp; Material Inspection</div>
+      <h2 class="slide-title">3D Hardware Inspector &amp; Exploded View</h2>
+      <div class="slide-subtitle">Multi-Part Procedural CAD &amp; Aerospace PBR Shaders</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Exploded-View Assembly Animation</h4>
+            <ul>
+              <li>Damped slider control (<code>0% to 100%</code>) dynamically expands spacecraft subsystems along radial vectors.</li>
+              <li>Inspect internal propellant tanks, avionics bays, scientific payloads, and retro-rocket thrusters.</li>
+              <li>Spring-damped easing provides realistic CAD-grade spatial clarity.</li>
+            </ul>
+            <h4 style="margin-top: 14px;">Procedural 3D Spacecraft Models</h4>
+            <p>Lunar Module Descent Stage, Martian Science Rover (rocker-bogie suspension), and Deep Space Probe (high-gain parabolic dish).</p>
+          </div>
+          <div class="feature-card">
+            <h4>Aerospace PBR Materials</h4>
+            <ul>
+              <li><strong>Kapton Foil Shader</strong>: Golden aluminized polyimide film with high specular reflectivity and micro-wrinkle bump map.</li>
+              <li><strong>Anodized Aluminum</strong>: Micro-roughness metalness mapping simulating spacecraft bus structural bulkheads.</li>
+              <li><strong>Solar Silicon Arrays</strong>: Deep navy anti-reflective coating with fine silver gridlines and high specular sheen.</li>
+              <li><strong>Martian Regolith Dusting</strong>: Progressive ferric oxide weathering procedural overlay.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>3D Hardware Inspection</span>
+        <span>Slide 10 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Academy & Media Lab -->
+    <div class="slide" data-notes="We built an interactive educational academy with automated grading tied to scientific claims, alongside a backend media lab that processes historical NASA footage with strict subprocess security.">
+      <div class="slide-eyebrow"><span>●</span> Education &amp; Media Intelligence</div>
+      <h2 class="slide-title">Space Archaeology Academy &amp; Media Lab</h2>
+      <div class="slide-subtitle">Interactive Education &amp; Guarded Multimedia Pipeline</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Space Archaeology Academy</h4>
+            <ul>
+              <li><strong>Tiered Difficulty Challenges</strong>: Beginner, Intermediate, and Advanced missions testing historical and physics comprehension.</li>
+              <li><strong>Automated Grading Engine</strong>: Instant submission assessment with score breakdowns.</li>
+              <li><strong>Claim-Backed Explanations</strong>: Every answer directly references verified NASA PDS claims and archival source IDs.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>FFmpeg / FFprobe Media Lab</h4>
+            <ul>
+              <li><strong>Subprocess Security Sandbox</strong>: Executes FFmpeg and FFprobe with validated argument lists, blocking path traversal and shell injection.</li>
+              <li><strong>Automated Contact Sheet Generation</strong>: Produces 2x2 thumbnail sheets from historical video archives.</li>
+              <li><strong>EBU R128 Audio Normalization</strong>: Ensures archival voice tracks match modern broadcast loudness standards (-23 LUFS).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Academy &amp; Media Lab</span>
+        <span>Slide 11 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: QA & Verification -->
+    <div class="slide" data-notes="Quality assurance is built into every layer. We have 10 comprehensive automated unit tests covering coordinates, spherical distance, dataset integrity, FFmpeg arguments, choreography, astronomical scale ratios, and audio routing.">
+      <div class="slide-eyebrow"><span>●</span> Quality Assurance &amp; Security</div>
+      <h2 class="slide-title">Verification, Security &amp; QA Suite</h2>
+      <div class="slide-subtitle">10 Automated Test Suites &amp; Production Hardening</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>10/10 Passing Automated Unit Tests</h4>
+            <ol style="font-size: 0.82rem; padding-left: 16px; line-height: 1.5; color: #cbd5e1;">
+              <li>Coordinate conversion round-trip for Apollo 11</li>
+              <li>Spherical Haversine distance for surface separation</li>
+              <li>Phase 05 scientific validation (100% NASA records pass)</li>
+              <li>Phase 09 search &amp; filter engine across bodies &amp; categories</li>
+              <li>Phase 06 FFmpeg command builder security &amp; path traversal</li>
+              <li>Phase 10 educational assessment scoring and claim explanations</li>
+              <li>70-Beat 14-Chapter Story Choreography telemetry accuracy</li>
+              <li>Astronomical scale engine planet-to-moon diameter ratios</li>
+              <li>22-World Natural Satellite catalog and camera presets</li>
+              <li>Story Cinema Audio chapter mapping and asset validation</li>
+            </ol>
+          </div>
+          <div class="feature-card">
+            <h4>Security &amp; Build Standards</h4>
+            <div class="highlight-banner" style="border-left-color: var(--accent-cyan); margin-bottom: 12px;">
+              <strong>Deterministic Builds:</strong> Zero runtime vulnerabilities, zero path traversal, and clean git history.
+            </div>
+            <ul>
+              <li><strong>TypeScript Compiler</strong>: Strict null checks, zero unused locals, 100% type coverage.</li>
+              <li><strong>Vite 8 &amp; Rollup Bundler</strong>: 1.4s production build time, optimized Gzip assets.</li>
+              <li><strong>Linear Git Commits</strong>: Full version control with atomic commits on <code>main</code>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Quality Assurance</span>
+        <span>Slide 12 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: Live Demo & Roadmap -->
+    <div class="slide" data-notes="The application is live right now. Looking forward, our roadmap includes WebXR immersion for VR headsets, live telemetry integration for upcoming Artemis lunar landings, and expanded oceanic visualizations for moons like Europa.">
+      <div class="slide-eyebrow"><span>●</span> Operations &amp; Future Horizons</div>
+      <h2 class="slide-title">Live Demonstration &amp; Future Roadmap</h2>
+      <div class="slide-subtitle">Operational Excellence &amp; Expansion Horizons</div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="feature-card">
+            <h4>Current Operational Capabilities</h4>
+            <ul>
+              <li><strong>Live Development &amp; Production Server</strong>: Active on port 3000 with Hot Module Replacement (HMR).</li>
+              <li><strong>Full Touch &amp; Mobile Support</strong>: Responsive multi-dock layout, Zen mode toggle, and touch orbit navigation.</li>
+              <li><strong>Offline Acoustic Synthesizers</strong>: Web Audio fallback operates even without network asset fetches.</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <h4>Future Roadmap Horizons</h4>
+            <ul>
+              <li><strong>Expanded Outer Worlds</strong>: Subsurface ocean visualization for Europa, Enceladus, and Ganymede.</li>
+              <li><strong>WebXR VR/AR Support</strong>: Walk on Apollo 11 Tranquillity Base in virtual reality headsets.</li>
+              <li><strong>Artemis III Real-Time Integration</strong>: Stream live telemetry from upcoming crewed lunar surface missions.</li>
+              <li><strong>Crowdsourced Archaeology Annotations</strong>: Verified peer-reviewed community contribution pipeline.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Roadmap &amp; Horizons</span>
+        <span>Slide 13 of 14</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: Conclusion & Q&A -->
+    <div class="slide" data-notes="Thank you for your time. AFTERLIGHT stands ready to preserve and bring alive humanity's greatest exploratory achievements. We welcome any questions and would be delighted to demonstrate the live platform.">
+      <div class="slide-eyebrow"><span>●</span> Mission Summary &amp; Q&amp;A</div>
+      <h2 class="slide-title">Preserving Our Cosmic Heritage</h2>
+      <div class="slide-subtitle">Honoring the Past to Inspire the Interplanetary Future</div>
+      <div class="slide-body">
+        <div class="highlight-banner" style="margin-top: 10px;">
+          <em>"That's one small step for man, one giant leap for mankind."</em><br>
+          <strong>AFTERLIGHT ensures those first footsteps, wheels, and sensors are never forgotten, mislocated, or erased.</strong>
+        </div>
+        <div class="grid-2" style="margin-top: 20px;">
+          <div class="feature-card">
+            <h4>Key Architectural Achievements</h4>
+            <ul>
+              <li>Authentic 3D spatial twin of planetary artifacts.</li>
+              <li>14-Chapter synchronized audiovisual storytelling.</li>
+              <li>24s dual-part soft increasing thruster cushion with immediate pause.</li>
+              <li>Strict NASA PDS and LROC scientific provenance.</li>
+            </ul>
+          </div>
+          <div class="feature-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <h3 style="color: var(--accent-cyan); font-size: 1.6rem; margin-bottom: 8px;">Thank You</h3>
+            <p style="font-weight: 700; color: #fff; margin-bottom: 12px;">AFTERLIGHT Engineering Team</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Open for Questions, Technical Deep-Dives &amp; Live Demo</p>
+            <div>
+              <span class="tag tag-cyan">Live Simulation Available</span>
+              <span class="tag tag-amber">NASA Space Apps 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Conclusion &amp; Questions</span>
+        <span>Slide 14 of 14</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Speaker Notes Drawer -->
+  <div id="speaker-notes-drawer">
+    <div class="notes-title">SPEAKER NOTES (Press [N] to hide)</div>
+    <div class="notes-content" id="notes-content">Welcome to the presentation.</div>
+  </div>
+
+  <!-- Navigation Pill -->
+  <div class="nav-pill">
+    <button id="prev-btn" title="Previous Slide [←]">‹</button>
+    <div class="slide-counter" id="slide-counter">01 / 14</div>
+    <button id="next-btn" title="Next Slide [→]">›</button>
+  </div>
+
+  <script>
+    (function () {
+      const slides = document.querySelectorAll('.slide');
+      const counter = document.getElementById('slide-counter');
+      const progressBar = document.getElementById('progress-bar');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const notesBtn = document.getElementById('notes-btn');
+      const notesDrawer = document.getElementById('speaker-notes-drawer');
+      const notesContent = document.getElementById('notes-content');
+      const fsBtn = document.getElementById('fs-btn');
+
+      let currentSlide = 0;
+      const totalSlides = slides.length;
+
+      function updateSlide(index) {
+        if (index < 0) index = 0;
+        if (index >= totalSlides) index = totalSlides - 1;
+        currentSlide = index;
+
+        slides.forEach((s, i) => {
+          s.classList.toggle('active', i === currentSlide);
+        });
+
+        const numStr = String(currentSlide + 1).padStart(2, '0');
+        const totStr = String(totalSlides).padStart(2, '0');
+        counter.textContent = `${numStr} / ${totStr}`;
+
+        const pct = ((currentSlide + 1) / totalSlides) * 100;
+        progressBar.style.width = `${pct}%`;
+
+        // Update speaker notes
+        const activeSlide = slides[currentSlide];
+        notesContent.textContent = activeSlide.getAttribute('data-notes') || 'No notes for this slide.';
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides - 1) {
+          updateSlide(currentSlide + 1);
+        }
+      }
+
+      function prevSlide() {
+        if (currentSlide > 0) {
+          updateSlide(currentSlide - 1);
+        }
+      }
+
+      function toggleNotes() {
+        notesDrawer.classList.toggle('open');
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      prevBtn.addEventListener('click', prevSlide);
+      nextBtn.addEventListener('click', nextSlide);
+      notesBtn.addEventListener('click', toggleNotes);
+      fsBtn.addEventListener('click', toggleFullscreen);
+
+      // Keyboard Controls
+      window.addEventListener('keydown', (e) => {
+        if (['ArrowRight', 'PageDown', ' '].includes(e.key)) {
+          e.preventDefault();
+          nextSlide();
+        } else if (['ArrowLeft', 'PageUp'].includes(e.key)) {
+          e.preventDefault();
+          prevSlide();
+        } else if (e.key.toLowerCase() === 'n') {
+          e.preventDefault();
+          toggleNotes();
+        } else if (e.key.toLowerCase() === 'f') {
+          e.preventDefault();
+          toggleFullscreen();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          updateSlide(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          updateSlide(totalSlides - 1);
+        }
+      });
+
+      updateSlide(0);
+    })();
+  </script>
+</body>
+</html>
