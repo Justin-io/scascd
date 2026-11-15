@@ -108,9 +108,9 @@ export default function App() {
   );
 
   // 12-Chapter / 60-Beat 3D Storyline Choreography & Cinema Rig State
-  const [activeStoryChapter, setActiveStoryChapter] = useState<StoryChapterNumber>(6);
-  const [storyProgress, setStoryProgress] = useState<number>(0.12);
-  const [isStoryPlaying, setIsStoryPlaying] = useState<boolean>(true);
+  const [activeStoryChapter, setActiveStoryChapter] = useState<StoryChapterNumber>(1);
+  const [storyProgress, setStoryProgress] = useState<number>(0.0);
+  const [isStoryPlaying, setIsStoryPlaying] = useState<boolean>(false);
   const [autoAdvanceChapters, setAutoAdvanceChapters] = useState<boolean>(true);
   const [cinemaCameraMode, setCinemaCameraMode] =
     useState<CinemaCameraMode>('director_auto');
@@ -161,13 +161,21 @@ export default function App() {
 
   // Advance 12-Chapter 3D Storyline Animation Progress matching EXACT archival video duration
   useEffect(() => {
-    if (viewportMode !== 'story_cinema' || !isStoryPlaying) {
+    if (viewportMode !== 'story_cinema' || !isStoryPlaying || activeWorkspace !== 'none') {
       spaceAudio.stopStoryAudio();
       return;
     }
 
-    // Synchronize and play authentic historical mission video audio (CH 1 to CH 4 play rocket space travel audio)
-    void spaceAudio.startStoryAudio(selectedArtifact.id, storyProgress, undefined, 0.35, activeStoryChapter);
+    // Strict chapter audio mapping in Watch Story Intro:
+    // - CH 1 to 4: rocket_space_travel_12s (deep space travel cruise audio)
+    // - CH 5: landing_increasing_thruster_ch5 (first 12s part: descent thrusters)
+    // - CH 6: landing_increasing_thruster_ch6 (second 12s part: terminal cushion thrusters)
+    // - CH 7+: strictly silent
+    if (activeStoryChapter < 1 || activeStoryChapter > 6) {
+      spaceAudio.stopStoryAudio();
+    } else {
+      void spaceAudio.startStoryAudio(selectedArtifact.id, storyProgress, undefined, 0.35, activeStoryChapter);
+    }
 
     const tickMs = 50;
     const progressPerTick = (tickMs / 1000) / chapterDurationSec;
@@ -194,6 +202,7 @@ export default function App() {
   }, [
     viewportMode,
     isStoryPlaying,
+    activeWorkspace,
     autoAdvanceChapters,
     chapterDurationSec,
     activeStoryChapter,
@@ -245,12 +254,7 @@ export default function App() {
     const art = ARTIFACT_RECORDS.find((a) => a.id === artifactId);
     if (!art) return;
 
-    if (art.proceduralModelType === 'lander') {
-      spaceAudio.playLandingIncreasingThruster();
-    } else if (art.proceduralModelType === 'rover') {
-      spaceAudio.playLandingTouchdownContact();
-    }
-
+    // Exploration click is silent; audio is strictly reserved for Watch Story Intro
     setSelectedArtifactId(art.id);
     setSelectedBodyId(art.bodyId);
   };
@@ -397,7 +401,7 @@ export default function App() {
                 if (viewportMode === 'story_cinema' && activeWorkspace === 'none') {
                   setActiveWorkspace('storytelling');
                 } else {
-                  handleLaunchStoryCinema(6);
+                  handleLaunchStoryCinema(1);
                 }
               }}
               className={`hover:text-white hover:underline underline-offset-4 transition-colors whitespace-nowrap shrink-0 ${
@@ -456,9 +460,6 @@ export default function App() {
               onClick={() => {
                 const nextMute = spaceAudio.toggleMute();
                 setIsAudioMuted(nextMute);
-                if (!nextMute) {
-                  spaceAudio.playTelemetryPing();
-                }
               }}
               title={isAudioMuted ? 'Unmute Space Audio' : 'Mute Space Audio'}
               className="p-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-800 rounded transition-colors flex items-center gap-1.5"
@@ -527,7 +528,7 @@ export default function App() {
         </button>
         <button
           type="button"
-          onClick={() => handleLaunchStoryCinema(6)}
+          onClick={() => handleLaunchStoryCinema(1)}
           className={`px-2.5 py-1 rounded border whitespace-nowrap shrink-0 transition-colors ${
             viewportMode === 'story_cinema'
               ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-semibold'
@@ -839,7 +840,7 @@ export default function App() {
                     )}
                     <button
                       type="button"
-                      onClick={() => handleLaunchStoryCinema(6)}
+                      onClick={() => handleLaunchStoryCinema(1)}
                       className="px-3 py-1.5 text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded flex items-center gap-1 transition-colors"
                     >
                       <Play className="w-3 h-3" />
@@ -1057,7 +1058,7 @@ export default function App() {
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => handleLaunchStoryCinema(6)}
+                    onClick={() => handleLaunchStoryCinema(1)}
                     className="px-3 py-1.5 text-xs font-semibold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded flex items-center gap-1 transition-colors"
                   >
                     <Play className="w-3 h-3" />
@@ -1219,7 +1220,6 @@ export default function App() {
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         setExplodedFactor(val);
-                        spaceAudio.playExplodedSlide();
                       }}
                       className="w-28 accent-cyan-400 cursor-pointer"
                     />

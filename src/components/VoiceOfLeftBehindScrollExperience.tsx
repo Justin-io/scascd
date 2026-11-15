@@ -177,10 +177,9 @@ export const VoiceOfLeftBehindScrollExperience: React.FC<VoiceOfLeftBehindScroll
 
   const SECTIONS = ['hero', 'moon', 'mars', 'lab'] as const;
 
-  // Unified audio trigger using the physics-grounded spaceAudio engine
+  // Silenced for introductory scroll experience; audio strictly reserved for Watch Story Intro
   const playBeep = (_freq = 440, _duration = 0.15) => {
-    if (!soundEnabled) return;
-    spaceAudio.playTelemetryPing();
+    // Silent
   };
 
   const scrollToSection = (ref: React.RefObject<HTMLElement | null>) => {
@@ -375,9 +374,6 @@ export const VoiceOfLeftBehindScrollExperience: React.FC<VoiceOfLeftBehindScroll
             onClick={() => {
               const isMuted = spaceAudio.toggleMute();
               setSoundEnabled(!isMuted);
-              if (!isMuted) {
-                spaceAudio.playTelemetryPing();
-              }
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono text-[#C1C4BA] hover:text-[#F7C558] transition-colors"
             title="Toggle synthesized telemetry sound"

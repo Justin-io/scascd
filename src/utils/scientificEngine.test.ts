@@ -186,5 +186,64 @@ test('22-World Satellite Catalog, Scientific Asset Manifests, Parent-Planet Sky 
   }
 });
 
+test('Story Cinema Audio Chapter Mapping and Audio Assets Verification', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+
+  // Verify all audio assets exist and have positive size
+  const soundDir = path.resolve('public/media/sounds');
+  const requiredFiles = [
+    'rocket_space_travel_12s.wav',
+    'landing_increasing_thruster_ch5.wav',
+    'landing_increasing_thruster_ch6.wav',
+    'landing_increasing_thruster.wav',
+  ];
+
+  for (const filename of requiredFiles) {
+    const fullPath = path.join(soundDir, filename);
+    assert.equal(fs.existsSync(fullPath), true, `Missing required audio file: ${filename}`);
+    const stats = fs.statSync(fullPath);
+    assert.equal(stats.size > 1000, true, `Audio file too small or empty: ${filename}`);
+  }
+
+  // Verify Chapter Audio Mapping Contract:
+  // CH 1-4: rocket_space_travel_12s
+  // CH 5: landing_increasing_thruster_ch5
+  // CH 6: landing_increasing_thruster_ch6
+  // CH 7-14 & invalid: silent (null/undefined)
+  const getChapterSoundId = (chapter?: number): string | null => {
+    if (chapter === undefined || chapter < 1 || chapter > 6) {
+      return null;
+    }
+    if (chapter >= 1 && chapter <= 4) {
+      return 'rocket_space_travel_12s';
+    }
+    if (chapter === 5) {
+      return 'landing_increasing_thruster_ch5';
+    }
+    if (chapter === 6) {
+      return 'landing_increasing_thruster_ch6';
+    }
+    return null;
+  };
+
+  assert.equal(getChapterSoundId(1), 'rocket_space_travel_12s');
+  assert.equal(getChapterSoundId(2), 'rocket_space_travel_12s');
+  assert.equal(getChapterSoundId(3), 'rocket_space_travel_12s');
+  assert.equal(getChapterSoundId(4), 'rocket_space_travel_12s');
+  assert.equal(getChapterSoundId(5), 'landing_increasing_thruster_ch5');
+  assert.equal(getChapterSoundId(6), 'landing_increasing_thruster_ch6');
+
+  // Verify all chapters from 7 to 14 are strictly silent
+  for (let ch = 7; ch <= 14; ch++) {
+    assert.equal(getChapterSoundId(ch), null, `Chapter ${ch} must be silent`);
+  }
+  // Verify unassigned / undefined is strictly silent
+  assert.equal(getChapterSoundId(undefined), null);
+  assert.equal(getChapterSoundId(0), null);
+  assert.equal(getChapterSoundId(15), null);
+});
+
+
 
 

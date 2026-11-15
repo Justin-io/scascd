@@ -46,6 +46,8 @@ class SpaceAudioManager {
   private activeStoryStartTime: number = 0;
   private activeStoryBufferDuration: number = 12.0;
   private activeSyntheticNodes: Set<AudioScheduledSourceNode> = new Set();
+  private storyAudioGeneration: number = 0;
+  private isStoryPlaybackActive: boolean = false;
 
   private isMuted: boolean = false;
   private masterVolume: number = 0.55;
@@ -408,12 +410,12 @@ class SpaceAudioManager {
     // Silent
   }
 
-  public playExplodedSlide(volume = 0.45): void {
-    this.playLandingTouchdownContact(volume * 0.5);
+  public playExplodedSlide(_volume = 0.45): void {
+    // Silenced: strictly no background sound effects during general exploration
   }
 
-  public playTelemetryPing(volume = 0.4): void {
-    this.playLandingTouchdownContact(volume * 0.6);
+  public playTelemetryPing(_volume = 0.4): void {
+    // Silenced: strictly no background telemetry pings during general exploration
   }
 
   public playCelestialTransit(_volume = 0.65): void {
@@ -426,44 +428,43 @@ class SpaceAudioManager {
    * Starts playing the authentic archival mission descent / flight soundscape
    * matching the exact historical video duration.
    * Plays rocket space travel audio across Chapters 1 to 4 in story cinema mode.
+   * Plays soft landing increasing thrusters part 1 for Chapter 5 and part 2 for Chapter 6.
+   * Strictly silences all other chapters.
    */
   public async startStoryAudio(
-    artifactId: string,
+    _artifactId: string,
     progress = 0.0,
-    soundOverride?: SoundId,
+    _soundOverride?: SoundId,
     volume = 0.35,
     chapter?: StoryChapterNumber | number
   ): Promise<void> {
     if (this.isMuted) return;
 
-    // Specifically play:
-    // - Chapters 1 to 4: rocket_space_travel_12s (loops seamlessly across deep space cruise)
-    // - Chapter 5: landing_increasing_thruster_ch5 (first 12s part of increasing thrusters)
-    // - Chapter 6: landing_increasing_thruster_ch6 (second 12s part of increasing thrusters to reduce impact)
-    if (chapter !== undefined) {
-      if (chapter >= 1 && chapter <= 4) {
-        soundOverride = 'rocket_space_travel_12s';
-      } else if (chapter === 5 && SOUND_PATHS['landing_increasing_thruster_ch5']) {
-        soundOverride = 'landing_increasing_thruster_ch5';
-      } else if (chapter === 6 && SOUND_PATHS['landing_increasing_thruster_ch6']) {
-        soundOverride = 'landing_increasing_thruster_ch6';
-      } else if (!soundOverride) {
-        // Stop audio for chapters without assigned soundscape
-        this.stopStoryAudio();
-        return;
-      }
+    // Strict chapter assignment:
+    // Only chapters 1 to 6 have assigned audio in Watch Story Intro:
+    // - Chapters 1 to 4: rocket_space_travel_12s (deep space travel cruise audio)
+    // - Chapter 5: landing_increasing_thruster_ch5 (first 12s part: descent thrusters)
+    // - Chapter 6: landing_increasing_thruster_ch6 (second 12s part: terminal cushion thrusters to reduce impact)
+    // - All other chapters (7 to 14) or missing chapter: strictly silent!
+    if (chapter === undefined || chapter < 1 || chapter > 6) {
+      this.stopStoryAudio();
+      return;
     }
 
-    let soundId: SoundId = soundOverride || 'rocket_space_travel_12s';
-    if (!soundOverride) {
-      if (artifactId === 'ART-APOLLO11-LM-DS' && SOUND_PATHS['apollo11_story_12s']) {
-        soundId = 'apollo11_story_12s';
-      } else if (artifactId === 'ART-M2020-PERSEVERANCE' && SOUND_PATHS['perseverance_edl_10s']) {
-        soundId = 'perseverance_edl_10s';
-      } else if (SOUND_PATHS['rocket_space_travel_12s']) {
-        soundId = 'rocket_space_travel_12s';
-      }
+    let soundId: SoundId;
+    if (chapter >= 1 && chapter <= 4) {
+      soundId = 'rocket_space_travel_12s';
+    } else if (chapter === 5) {
+      soundId = 'landing_increasing_thruster_ch5';
+    } else if (chapter === 6) {
+      soundId = 'landing_increasing_thruster_ch6';
+    } else {
+      this.stopStoryAudio();
+      return;
     }
+
+    const currentGen = ++this.storyAudioGeneration;
+    this.isStoryPlaybackActive = true;
 
     const ctx = this.ensureContext();
     if (!ctx) return;
@@ -476,11 +477,14 @@ class SpaceAudioManager {
       }
     }
 
+    if (this.storyAudioGeneration !== currentGen || !this.isStoryPlaybackActive) {
+      return;
+    }
+
     // Check if the current audio is already playing and properly aligned within this chapter:
     if (
       this.activeStorySource &&
       this.activeStoryId === soundId &&
-      chapter !== undefined &&
       this.activeStoryChapter === chapter
     ) {
       const elapsed = (ctx.currentTime - this.activeStoryStartTime) % this.activeStoryBufferDuration;
@@ -492,11 +496,17 @@ class SpaceAudioManager {
       }
     }
 
-    this.stopStoryAudio();
+    this.stopStoryAudioInternal();
 
     const buffer = await this.loadAudioBuffer(soundId);
+    if (this.storyAudioGeneration !== currentGen || !this.isStoryPlaybackActive) {
+      return;
+    }
+
     if (!buffer) {
-      this.playSyntheticFallback(soundId, volume);
+      if (this.storyAudioGeneration === currentGen && this.isStoryPlaybackActive) {
+        this.playSyntheticFallback(soundId, volume);
+      }
       return;
     }
 
@@ -508,11 +518,7 @@ class SpaceAudioManager {
     const effectiveVolume =
       soundId === 'rocket_space_travel_12s'
         ? Math.min(volume, 0.35)
-        : soundId === 'landing_increasing_thruster' ||
-          soundId === 'landing_increasing_thruster_ch5' ||
-          soundId === 'landing_increasing_thruster_ch6'
-        ? Math.min(volume, 0.38)
-        : volume;
+        : Math.min(volume, 0.38);
     gain.gain.setValueAtTime(effectiveVolume, ctx.currentTime);
 
     source.connect(gain);
@@ -525,7 +531,7 @@ class SpaceAudioManager {
     this.activeStorySource = source;
     this.activeStoryGain = gain;
     this.activeStoryId = soundId;
-    this.activeStoryChapter = chapter !== undefined ? chapter : null;
+    this.activeStoryChapter = chapter;
     this.activeStoryBufferDuration = buffer.duration;
     this.activeStoryStartTime = ctx.currentTime - offsetSec;
 
@@ -539,49 +545,58 @@ class SpaceAudioManager {
     };
   }
 
-  /** Stops and disconnects all active story audio, standalone sounds, and synthetic nodes */
-  public stopStoryAudio(): void {
-    if (this.activeStorySource) {
-      try {
-        this.activeStorySource.stop();
-        this.activeStorySource.disconnect();
-      } catch {
-        // Ignore if already ended
-      }
-      this.activeStorySource = null;
-    }
+  /** Internal cleanup of active story audio nodes without resetting generation */
+  private stopStoryAudioInternal(): void {
     if (this.activeStoryGain) {
       try {
+        this.activeStoryGain.gain.setValueAtTime(0, this.ctx?.currentTime || 0);
         this.activeStoryGain.disconnect();
       } catch {
         // Ignore
       }
       this.activeStoryGain = null;
     }
+
+    if (this.activeStorySource) {
+      try {
+        this.activeStorySource.stop(0);
+        this.activeStorySource.disconnect();
+      } catch {
+        // Ignore if already ended
+      }
+      this.activeStorySource = null;
+    }
     this.activeStoryId = null;
     this.activeStoryChapter = null;
-
-    // Immediately stop any standalone sources
-    for (const source of this.activeSources) {
-      try {
-        source.stop();
-        source.disconnect();
-      } catch {
-        // Ignore
-      }
-    }
-    this.activeSources.clear();
 
     // Immediately stop any procedural synthetic nodes
     for (const node of this.activeSyntheticNodes) {
       try {
-        node.stop();
+        node.stop(0);
         node.disconnect();
       } catch {
         // Ignore
       }
     }
     this.activeSyntheticNodes.clear();
+  }
+
+  /** Stops and disconnects all active story audio, standalone sounds, and synthetic nodes */
+  public stopStoryAudio(): void {
+    ++this.storyAudioGeneration;
+    this.isStoryPlaybackActive = false;
+    this.stopStoryAudioInternal();
+
+    // Immediately stop any standalone sources
+    for (const source of this.activeSources) {
+      try {
+        source.stop(0);
+        source.disconnect();
+      } catch {
+        // Ignore
+      }
+    }
+    this.activeSources.clear();
   }
 
   /** Pauses story cinema audio */
