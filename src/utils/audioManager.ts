@@ -42,6 +42,10 @@ class SpaceAudioManager {
   private activeStorySource: AudioBufferSourceNode | null = null;
   private activeStoryGain: GainNode | null = null;
   private activeStoryId: string | null = null;
+  private activeStoryChapter: number | null = null;
+  private activeStoryStartTime: number = 0;
+  private activeStoryBufferDuration: number = 12.0;
+  private activeSyntheticNodes: Set<AudioScheduledSourceNode> = new Set();
 
   private isMuted: boolean = false;
   private masterVolume: number = 0.55;
@@ -194,6 +198,13 @@ class SpaceAudioManager {
     }
   }
 
+  private registerSyntheticNode(node: AudioScheduledSourceNode): void {
+    this.activeSyntheticNodes.add(node);
+    node.onended = () => {
+      this.activeSyntheticNodes.delete(node);
+    };
+  }
+
   /**
    * Procedural Web Audio API synthesis fallback for landing sounds
    */
@@ -212,6 +223,7 @@ class SpaceAudioManager {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc.connect(gain);
       gain.connect(this.mechanicalGain || ctx.destination);
+      this.registerSyntheticNode(osc);
       osc.start(now);
       osc.stop(now + 0.35);
     } else if (soundId === 'landing_pressure_release') {
@@ -232,6 +244,7 @@ class SpaceAudioManager {
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(this.mechanicalGain || ctx.destination);
+      this.registerSyntheticNode(noise);
       noise.start(now);
     } else if (
       soundId === 'landing_increasing_thruster' ||
@@ -290,6 +303,8 @@ class SpaceAudioManager {
       filter.connect(gain);
       gain.connect(this.mechanicalGain || ctx.destination);
 
+      this.registerSyntheticNode(osc);
+      this.registerSyntheticNode(noise);
       osc.start(now);
       noise.start(now);
       osc.stop(now + duration);
@@ -312,6 +327,7 @@ class SpaceAudioManager {
       osc.connect(filter);
       filter.connect(gain);
       gain.connect(this.mechanicalGain || ctx.destination);
+      this.registerSyntheticNode(osc);
       osc.start(now);
       osc.stop(now + 12.0);
     }
@@ -449,19 +465,6 @@ class SpaceAudioManager {
       }
     }
 
-    // Keep seamless continuous playback if rocket space travel audio is already playing across Chapters 1 to 4
-    if (
-      this.activeStorySource &&
-      this.activeStoryId === soundId &&
-      chapter !== undefined &&
-      chapter >= 1 &&
-      chapter <= 4
-    ) {
-      return;
-    }
-
-    this.stopStoryAudio();
-
     const ctx = this.ensureContext();
     if (!ctx) return;
 
@@ -473,6 +476,24 @@ class SpaceAudioManager {
       }
     }
 
+    // Check if the current audio is already playing and properly aligned within this chapter:
+    if (
+      this.activeStorySource &&
+      this.activeStoryId === soundId &&
+      chapter !== undefined &&
+      this.activeStoryChapter === chapter
+    ) {
+      const elapsed = (ctx.currentTime - this.activeStoryStartTime) % this.activeStoryBufferDuration;
+      const expectedProgress = elapsed / this.activeStoryBufferDuration;
+      const progressDelta = Math.abs(expectedProgress - progress);
+      // If delta is under 0.08 (standard 50ms interval animation progression), keep playing smoothly!
+      if (progressDelta < 0.08 || progressDelta > 0.92) {
+        return;
+      }
+    }
+
+    this.stopStoryAudio();
+
     const buffer = await this.loadAudioBuffer(soundId);
     if (!buffer) {
       this.playSyntheticFallback(soundId, volume);
@@ -481,11 +502,7 @@ class SpaceAudioManager {
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-
-    // Loop seamlessly across Chapters 1 to 4
-    if (chapter !== undefined && chapter >= 1 && chapter <= 4) {
-      source.loop = true;
-    }
+    source.loop = true;
 
     const gain = ctx.createGain();
     const effectiveVolume =
@@ -501,24 +518,28 @@ class SpaceAudioManager {
     source.connect(gain);
     gain.connect(this.mechanicalGain || ctx.destination);
 
-    const safeProgress = Math.max(0.0, Math.min(0.98, progress));
+    const safeProgress = Math.max(0.0, Math.min(0.99, progress));
     const offsetSec = (safeProgress * buffer.duration) % buffer.duration;
     source.start(0, offsetSec);
 
     this.activeStorySource = source;
     this.activeStoryGain = gain;
     this.activeStoryId = soundId;
+    this.activeStoryChapter = chapter !== undefined ? chapter : null;
+    this.activeStoryBufferDuration = buffer.duration;
+    this.activeStoryStartTime = ctx.currentTime - offsetSec;
 
     source.onended = () => {
       if (this.activeStorySource === source) {
         this.activeStorySource = null;
         this.activeStoryGain = null;
         this.activeStoryId = null;
+        this.activeStoryChapter = null;
       }
     };
   }
 
-  /** Stops and disconnects active mission story cinema audio */
+  /** Stops and disconnects all active story audio, standalone sounds, and synthetic nodes */
   public stopStoryAudio(): void {
     if (this.activeStorySource) {
       try {
@@ -530,15 +551,58 @@ class SpaceAudioManager {
       this.activeStorySource = null;
     }
     if (this.activeStoryGain) {
-      this.activeStoryGain.disconnect();
+      try {
+        this.activeStoryGain.disconnect();
+      } catch {
+        // Ignore
+      }
       this.activeStoryGain = null;
     }
     this.activeStoryId = null;
+    this.activeStoryChapter = null;
+
+    // Immediately stop any standalone sources
+    for (const source of this.activeSources) {
+      try {
+        source.stop();
+        source.disconnect();
+      } catch {
+        // Ignore
+      }
+    }
+    this.activeSources.clear();
+
+    // Immediately stop any procedural synthetic nodes
+    for (const node of this.activeSyntheticNodes) {
+      try {
+        node.stop();
+        node.disconnect();
+      } catch {
+        // Ignore
+      }
+    }
+    this.activeSyntheticNodes.clear();
   }
 
   /** Pauses story cinema audio */
   public pauseStoryAudio(): void {
     this.stopStoryAudio();
+  }
+
+  /** Immediately stops all audio playback */
+  public stopAllAudio(): void {
+    this.stopStoryAudio();
+  }
+
+  /** Seeks story cinema audio to an exact progress ratio (0.0 to 1.0) inside a chapter */
+  public seekStoryAudio(
+    artifactId: string,
+    progress: number,
+    chapter: StoryChapterNumber | number,
+    volume = 0.35
+  ): void {
+    this.stopStoryAudio();
+    void this.startStoryAudio(artifactId, progress, undefined, volume, chapter);
   }
 
   // --- MUTE & VOLUME CONTROLS ---

@@ -217,11 +217,20 @@ export default function App() {
         }
       } else if (e.key.toLowerCase() === 'h' && activeWorkspace === 'none') {
         setIsBottomDockCollapsed((prev) => !prev);
+      } else if (e.code === 'Space' && viewportMode === 'story_cinema' && activeWorkspace === 'none') {
+        e.preventDefault();
+        setIsStoryPlaying((prev) => {
+          const next = !prev;
+          if (!next) {
+            spaceAudio.stopStoryAudio();
+          }
+          return next;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeWorkspace, isSceneOptionsOpen]);
+  }, [activeWorkspace, isSceneOptionsOpen, viewportMode]);
 
   const handleSelectBody = (bodyId: CelestialBodyId) => {
     setSelectedSatellite(null);
@@ -608,13 +617,22 @@ export default function App() {
             onSelectChapter={(ch) => {
               setActiveStoryChapter(ch);
               setStoryProgress(0.0);
+              spaceAudio.stopStoryAudio();
             }}
             onScrubProgress={(p) => {
               setIsStoryPlaying(false);
               setStoryProgress(p);
               spaceAudio.stopStoryAudio();
             }}
-            onTogglePlay={() => setIsStoryPlaying((p) => !p)}
+            onTogglePlay={() => {
+              setIsStoryPlaying((prev) => {
+                const next = !prev;
+                if (!next) {
+                  spaceAudio.stopStoryAudio();
+                }
+                return next;
+              });
+            }}
             onToggleAutoAdvance={() => setAutoAdvanceChapters((a) => !a)}
             onChangeCameraMode={setCinemaCameraMode}
             onToggleMotionGraphics={() => setShowMotionGraphics((m) => !m)}

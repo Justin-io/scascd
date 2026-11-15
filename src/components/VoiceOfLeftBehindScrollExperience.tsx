@@ -553,7 +553,6 @@ export const VoiceOfLeftBehindScrollExperience: React.FC<VoiceOfLeftBehindScroll
               <button
                 type="button"
                 onClick={() => {
-                  void spaceAudio.playStoryIntroAudio(0.0, 0.35);
                   onLaunchStoryCinema(1);
                 }}
                 className="flex items-center gap-2.5 px-5 py-3.5 bg-[#141611]/80 hover:bg-[#1E211A] text-[#F5F3ED] border border-[#55594D] hover:border-[#F7C558] text-sm font-semibold rounded shadow transition-colors"
